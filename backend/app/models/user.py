@@ -1,0 +1,44 @@
+"""Foydalanuvchi (usta) modeli."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from sqlalchemy import BigInteger, Boolean, String, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.db import Base
+from app.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.price import PriceItem
+    from app.models.project import Project
+
+
+class User(TimestampMixin, Base):
+    """Bot va Mini App foydalanuvchisi."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    # BIGINT majburiy — Telegram ID int32 dan oshadi
+    telegram_id: Mapped[int] = mapped_column(
+        BigInteger, unique=True, nullable=False
+    )
+    full_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # Telegram username, @ siz
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    language: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="uz"
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+
+    projects: Mapped[list[Project]] = relationship(
+        "Project", back_populates="user", lazy="raise"
+    )
+    price_items: Mapped[list[PriceItem]] = relationship(
+        "PriceItem", back_populates="user", lazy="raise"
+    )
