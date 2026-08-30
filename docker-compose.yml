@@ -35,5 +35,17 @@ services:
       - "8000:8000"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Faqat lokal — polling rejimida. Prod da webhook ishlatiladi (app/bot/webhook.py).
+  bot:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/code
+    command: python -m app.bot.polling
+
 volumes:
   pgdata:
