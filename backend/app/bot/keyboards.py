@@ -113,6 +113,14 @@ def project_card_kb(project_id: int) -> InlineKeyboardMarkup:
     kb.row(_open_app_button())
     kb.row(
         InlineKeyboardButton(
+            text="📄 Hisobot (PDF)",
+            callback_data=ProjectCb(
+                action="report", project_id=project_id
+            ).pack(),
+        )
+    )
+    kb.row(
+        InlineKeyboardButton(
             text="⬅️ Ro'yxatga",
             callback_data=ProjectCb(action="list", project_id=project_id).pack(),
         )

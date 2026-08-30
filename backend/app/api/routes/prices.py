@@ -1,12 +1,13 @@
 """Narx endpointlari — ustaning katalogi va loyiha narxlari."""
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import delete, exists, select
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, DbSession, OwnedProject
 from app.models import Category, MeasureUnit, PriceItem, ProjectPrice, User
 from app.models.enums import EntryKind
+from app.services.legacy_seed import SEED_CATEGORY_NAMES, SEED_ITEM_NAMES
 from app.schemas.price import (
     PriceItemBulkUpdate,
     PriceItemCreate,
@@ -154,6 +155,63 @@ async def bulk_update_price_items(
     for item in items:
         await db.refresh(item)
     return [PriceItemRead.model_validate(i) for i in items]
+
+
+# --------------------------------------------------------------------------
+# Eski standart katalogni tozalash (09-vazifa) — bir martalik
+# --------------------------------------------------------------------------
+
+
+def _unused_seed_items_stmt(user_id: int):
+    """Ishlatilmagan seed pozitsiyalar: seed nomi, narxsiz, project_prices'da yo'q."""
+    used = select(ProjectPrice.price_item_id).where(
+        ProjectPrice.price_item_id.is_not(None)
+    )
+    return select(PriceItem.id).where(
+        PriceItem.user_id == user_id,
+        PriceItem.name.in_(SEED_ITEM_NAMES),
+        PriceItem.default_price == 0,
+        PriceItem.id.not_in(used),
+    )
+
+
+def _empty_seed_categories_stmt(user_id: int):
+    """Bo'sh qolgan seed kategoriyalar: seed nomi, faol pozitsiyasi yo'q."""
+    has_active = exists().where(
+        PriceItem.category_id == Category.id,
+        PriceItem.is_active.is_(True),
+    )
+    return select(Category.id).where(
+        Category.user_id == user_id,
+        Category.name.in_(SEED_CATEGORY_NAMES),
+        ~has_active,
+    )
+
+
+@router.get("/price-items/seeded")
+async def seeded_catalog_probe(user: CurrentUser, db: DbSession) -> dict:
+    """Tozalanadigan eski seed yozuvlari soni — banner shu bo'yicha ko'rsatiladi."""
+    item_ids = (
+        await db.execute(_unused_seed_items_stmt(user.id))
+    ).scalars().all()
+    cat_ids = (
+        await db.execute(_empty_seed_categories_stmt(user.id))
+    ).scalars().all()
+    return {"price_items": len(item_ids), "categories": len(cat_ids)}
+
+
+@router.delete("/price-items/seeded")
+async def delete_seeded_price_items(
+    user: CurrentUser, db: DbSession
+) -> dict:
+    """Hech qachon ishlatilmagan seed pozitsiyalarni o'chiradi (hard delete)."""
+    ids = (
+        await db.execute(_unused_seed_items_stmt(user.id))
+    ).scalars().all()
+    if ids:
+        await db.execute(delete(PriceItem).where(PriceItem.id.in_(ids)))
+        await db.commit()
+    return {"deleted": len(ids)}
 
 
 @router.patch("/price-items/{item_id}", response_model=PriceItemRead)

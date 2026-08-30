@@ -6,7 +6,8 @@ Tahrirlash / status / o'chirish — Mini App'da.
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot import keyboards as kb
@@ -16,6 +17,8 @@ from app.bot.states import NewProject
 from app.bot.utils import paginate
 from app.bot.views import send_project_card
 from app.models import Project, User
+from app.services.report_data import gather_report_data, report_filename
+from app.services.report_pdf import build_report_pdf
 
 router = Router(name="projects")
 
@@ -128,3 +131,31 @@ async def back_to_list(
     callback: CallbackQuery, session: AsyncSession, user: User
 ) -> None:
     await _show_list(callback, session, user, 1)
+
+
+@router.callback_query(ProjectCb.filter(F.action == "report"))
+async def send_report(
+    callback: CallbackQuery,
+    callback_data: ProjectCb,
+    session: AsyncSession,
+    user: User,
+) -> None:
+    """Hisob-kitob PDF'ini fayl sifatida yuboradi (08-soddalashtirishdan istisno)."""
+    project = await repo.get_owned_project(
+        session, user.id, callback_data.project_id
+    )
+    if project is None:
+        await callback.answer(texts.ERROR, show_alert=True)
+        return
+    await callback.answer("Hisobot tayyorlanmoqda…")
+
+    data = await gather_report_data(session, project, user, None, None)
+    pdf = await run_in_threadpool(build_report_pdf, data)
+    document = BufferedInputFile(
+        pdf, filename=report_filename(project.title, data.generated_at)
+    )
+    caption = (
+        f"{texts.esc(project.title)} — hisob-kitob\n"
+        f"{data.generated_at.strftime('%d.%m.%Y')} holatiga"
+    )
+    await callback.message.answer_document(document, caption=caption)

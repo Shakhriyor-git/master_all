@@ -80,6 +80,15 @@ export function hapticSuccess(): void {
   }
 }
 
+/** Tashqi havolani ochadi (PDF yuklab olish uchun). */
+export function openLink(url: string): void {
+  try {
+    WebApp.openLink(url)
+  } catch {
+    window.open(url, '_blank', 'noopener')
+  }
+}
+
 export function confirmDialog(message: string): Promise<boolean> {
   return new Promise((resolve) => {
     try {

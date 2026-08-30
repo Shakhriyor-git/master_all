@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,22 +22,7 @@ def _full_name(tg_user: dict) -> str:
     return name or tg_user.get("username") or f"user_{tg_user.get('id')}"
 
 
-async def get_current_user(
-    authorization: Annotated[str | None, Header()] = None,
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """`Authorization: tma <initData>` sarlavhasini tekshiradi.
-
-    Imzo to'g'ri bo'lsa telegram_id bo'yicha User topadi yoki yaratadi
-    (birinchi kirishda avtomatik ro'yxatdan o'tish). Yaroqsiz bo'lsa 401.
-    """
-    if not authorization or not authorization.lower().startswith("tma "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization sarlavhasi 'tma <initData>' ko'rinishida bo'lsin",
-        )
-
-    init_data = authorization[4:].strip()
+async def _user_from_init_data(init_data: str, db: AsyncSession) -> User:
     try:
         parsed = validate_init_data(init_data, settings.bot_token)
     except InvalidInitDataError as exc:
@@ -63,7 +48,47 @@ async def get_current_user(
     )
 
 
+async def get_current_user(
+    authorization: Annotated[str | None, Header()] = None,
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """`Authorization: tma <initData>` sarlavhasini tekshiradi.
+
+    Imzo to'g'ri bo'lsa telegram_id bo'yicha User topadi yoki yaratadi
+    (birinchi kirishda avtomatik ro'yxatdan o'tish). Yaroqsiz bo'lsa 401.
+    """
+    if not authorization or not authorization.lower().startswith("tma "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization sarlavhasi 'tma <initData>' ko'rinishida bo'lsin",
+        )
+    return await _user_from_init_data(authorization[4:].strip(), db)
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_download_user(
+    tma: Annotated[str | None, Query()] = None,
+    authorization: Annotated[str | None, Header()] = None,
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Fayl yuklab olish uchun: sarlavha YOKI `?tma=<initData>` so'rov parametri.
+
+    Brauzer `Telegram.WebApp.openLink` orqali ochilganda sarlavha yubora
+    olmaydi — shuning uchun initData URL'da uzatiladi.
+    """
+    if authorization and authorization.lower().startswith("tma "):
+        return await _user_from_init_data(authorization[4:].strip(), db)
+    if tma:
+        return await _user_from_init_data(tma.strip(), db)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="initData kerak (Authorization sarlavhasi yoki ?tma=)",
+    )
+
+
+DownloadUser = Annotated[User, Depends(get_download_user)]
 
 
 async def get_owned_project(

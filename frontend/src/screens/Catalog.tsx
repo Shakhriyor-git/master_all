@@ -1,11 +1,17 @@
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   IconDotsVertical,
   IconPlus,
 } from '@tabler/icons-react'
-import type { Category, PriceItem } from '../api/catalog'
+import {
+  deleteSeededCatalog,
+  getSeededInfo,
+  type Category,
+  type PriceItem,
+} from '../api/catalog'
 import { BottomSheet } from '../components/BottomSheet'
 import { MoneyInput } from '../components/MoneyInput'
 import { NewServiceSheet } from '../components/NewServiceSheet'
@@ -79,8 +85,12 @@ export function Catalog() {
     )
   }
 
+  const unit = kind === 'work' ? 'xizmat' : 'pozitsiya'
+
   return (
     <Screen title="Xizmatlarim">
+      <SeededBanner />
+
       <div className="mb-3">
         <Segment
           options={[
@@ -96,7 +106,13 @@ export function Catalog() {
       </div>
 
       {groups.length === 0 ? (
-        <EmptyState text="Hali kategoriya yo‘q." />
+        <div className="rounded-card border border-border bg-surface px-5 py-8 text-center">
+          <p className="text-body text-text">Katalogingiz bo‘sh</p>
+          <p className="mt-2 text-label text-text-muted">
+            Avval kategoriya yarating (masalan: Shift, Elektrika), keyin
+            ichiga xizmatlaringizni qo‘shing.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {groups.map((g) => {
@@ -113,7 +129,7 @@ export function Catalog() {
                 <span className="text-title">{g.icon ?? '📦'}</span>
                 <span className="text-body text-text">{g.name}</span>
                 <span className="text-label text-text-muted">
-                  {g.items.length} xizmat
+                  {g.items.length} {unit}
                 </span>
                 <span
                   className={
@@ -132,6 +148,59 @@ export function Catalog() {
 
       <NewCategoryCard kind={kind} />
     </Screen>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Eski standart katalog haqida bir martalik banner
+// ---------------------------------------------------------------------------
+function SeededBanner() {
+  const qc = useQueryClient()
+  const [dismissed, setDismissed] = useState(false)
+  const probe = useQuery({
+    queryKey: ['catalog', 'seeded'],
+    queryFn: getSeededInfo,
+    staleTime: 60_000,
+  })
+  const clear = useMutation({
+    mutationFn: deleteSeededCatalog,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] })
+      qc.invalidateQueries({ queryKey: ['price-items'] })
+      qc.invalidateQueries({ queryKey: ['catalog', 'seeded'] })
+      hapticSuccess()
+    },
+  })
+
+  const count = probe.data?.price_items ?? 0
+  if (dismissed || count === 0) return null
+
+  return (
+    <div className="mb-3 rounded-card border border-border bg-surface-2 p-3">
+      <p className="text-label text-text">
+        Tayyor katalog endi ishlatilmaydi. Ishlatilmagan {count} ta
+        pozitsiyani o‘chirasizmi?
+      </p>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          disabled={clear.isPending}
+          onClick={() => {
+            clear.mutate(undefined, { onSettled: () => setDismissed(true) })
+          }}
+          className="min-h-[36px] flex-1 rounded-btn bg-primary text-label text-on-primary active:scale-[0.98] disabled:opacity-60"
+        >
+          O‘chirish
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="min-h-[36px] flex-1 rounded-btn bg-surface text-label text-text-muted active:scale-[0.98]"
+        >
+          Qoldirish
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -230,6 +299,7 @@ function CategoryDetail({
 
   const priceRefs = useRef<(HTMLInputElement | null)[]>([])
   const priceless = group.items.filter((i) => Number(i.default_price) <= 0)
+  const noun = kind === 'work' ? 'xizmat' : 'material'
 
   return (
     <Screen
@@ -255,7 +325,7 @@ function CategoryDetail({
       )}
 
       {group.items.length === 0 ? (
-        <EmptyState text="Bu kategoriyada hali xizmat yo‘q." />
+        <EmptyState text={`Bu kategoriyada hali ${noun} yo‘q.`} />
       ) : (
         <div className="overflow-hidden rounded-card border border-border bg-surface">
           {group.items.map((it, idx) => (
@@ -299,7 +369,7 @@ function CategoryDetail({
         onClick={() => setNewOpen(true)}
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-border py-3 text-label text-primary active:bg-surface-2"
       >
-        <IconPlus size={16} /> Yangi xizmat
+        <IconPlus size={16} /> Yangi {noun}
       </button>
 
       {/* qator menyusi */}

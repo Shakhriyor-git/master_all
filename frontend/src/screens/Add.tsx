@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -152,6 +152,17 @@ function ServiceFlow({
     enabled: !showCategoryStep || categoryId != null,
   })
 
+  // Katalog bo'sh bo'lsa — to'g'ridan-to'g'ri "Yangi qo'shish" formasi
+  const catalogEmpty =
+    !cats.isPending &&
+    categories.length === 0 &&
+    !items.isPending &&
+    (items.data?.length ?? 0) === 0 &&
+    !q
+  useEffect(() => {
+    if (catalogEmpty) setNewOpen(true)
+  }, [catalogEmpty])
+
   const price = item
     ? Number(item.default_price) > 0
       ? Number(item.default_price)
@@ -216,13 +227,26 @@ function ServiceFlow({
         </div>
       )}
 
-      {(!showCategoryStep || categoryId != null) && (
+      {catalogEmpty ? (
+        <button
+          type="button"
+          onClick={() => setNewOpen(true)}
+          className="flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-border py-4 text-label text-primary active:bg-surface-2"
+        >
+          <IconPlus size={16} />{' '}
+          Yangi {kind === 'material' ? 'material' : 'xizmat'} qo‘shish
+        </button>
+      ) : (!showCategoryStep || categoryId != null) && (
         <>
           <input
             className={INPUT}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Xizmatni qidiring…"
+            placeholder={
+              kind === 'material'
+                ? 'Materialni qidiring…'
+                : 'Xizmatni qidiring…'
+            }
           />
           <div className="mt-2 max-h-64 overflow-y-auto rounded-card border border-border bg-surface">
             {(items.data ?? []).map((it) => (

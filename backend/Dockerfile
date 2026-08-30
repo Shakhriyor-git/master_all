@@ -6,6 +6,10 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /code
 
+# DejaVu shrifti — PDF hisobotda o' va g' harflari to'g'ri chiqishi uchun
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

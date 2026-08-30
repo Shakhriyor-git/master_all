@@ -112,11 +112,13 @@ export function NewServiceSheet({
     }
   }
 
+  const noun = kind === 'material' ? 'material' : 'xizmat'
+
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={editing ? 'Xizmatni tahrirlash' : 'Yangi xizmat'}
+      title={editing ? `${noun === 'material' ? 'Materialni' : 'Xizmatni'} tahrirlash` : `Yangi ${noun}`}
     >
       <div className="space-y-3">
         <label className="block text-label text-text-muted">

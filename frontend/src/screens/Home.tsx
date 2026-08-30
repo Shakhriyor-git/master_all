@@ -1,8 +1,15 @@
-import { IconChevronRight, IconPlus, IconSelector } from '@tabler/icons-react'
+import {
+  IconChevronRight,
+  IconFileText,
+  IconPlus,
+  IconSelector,
+} from '@tabler/icons-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Entry, EntryKind } from '../api/entries'
+import { reportPdfUrl } from '../api/report'
 import { AddPaymentSheet } from '../components/AddPaymentSheet'
+import { BottomSheet } from '../components/BottomSheet'
 import { EmptyState, Screen } from '../components/Screen'
 import { ProjectPicker } from '../components/ProjectPicker'
 import { SplashSkeleton } from '../components/states'
@@ -11,6 +18,7 @@ import { useRecentEntries, useSummary } from '../hooks/useEntries'
 import { usePayments } from '../hooks/usePayments'
 import { KIND_AMOUNT, KIND_LABEL, PURPOSE_LABEL } from '../lib/entryVisual'
 import { fmtMoney, fmtQty } from '../lib/format'
+import { openLink } from '../lib/telegram'
 
 export function Home() {
   const { active, projects, isLoading, setActive } = useActiveProject()
@@ -64,6 +72,8 @@ export function Home() {
           </div>
         </div>
       </button>
+
+      <ReportButton projectId={active.id} />
 
       <Block kind="work" projectId={active.id} title="Bajarilgan ishlar" />
       <Block kind="material" projectId={active.id} title="Materiallar" />
@@ -159,6 +169,74 @@ function Block({
         </button>
       </div>
     </section>
+  )
+}
+
+function ReportButton({ projectId }: { projectId: number }) {
+  const [open, setOpen] = useState(false)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+
+  const inputClass =
+    'w-full rounded-btn border border-border bg-surface-2 px-3 py-2 text-body text-text outline-none focus:border-primary'
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-card border border-border bg-surface py-2.5 text-label text-primary active:scale-[0.99]"
+      >
+        <IconFileText size={16} /> Hisobot (PDF)
+      </button>
+
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Hisob-kitob PDF"
+      >
+        <div className="space-y-3">
+          <p className="text-label text-text-muted">
+            Sana oralig‘ini tanlamasangiz — butun davr bo‘yicha.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block text-label text-text-muted">
+              Dan
+              <input
+                type="date"
+                className={inputClass}
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
+            </label>
+            <label className="block text-label text-text-muted">
+              Gacha
+              <input
+                type="date"
+                className={inputClass}
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              openLink(
+                reportPdfUrl(projectId, {
+                  dateFrom: from || undefined,
+                  dateTo: to || undefined,
+                }),
+              )
+              setOpen(false)
+            }}
+            className="min-h-[44px] w-full rounded-btn bg-primary text-body text-on-primary active:scale-[0.98]"
+          >
+            PDF yuklab olish
+          </button>
+        </div>
+      </BottomSheet>
+    </>
   )
 }
 

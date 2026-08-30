@@ -1,13 +1,14 @@
 """Kategoriya endpointlari."""
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, exists, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, DbSession
 from app.models import Category, PriceItem, User
 from app.models.enums import EntryKind
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.services.legacy_seed import SEED_CATEGORY_NAMES
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
 
@@ -75,6 +76,30 @@ async def create_category(
         ) from exc
     await db.refresh(cat)
     return cat
+
+
+@router.delete("/seeded")
+async def delete_seeded_categories(
+    user: CurrentUser, db: DbSession
+) -> dict:
+    """Bo'sh qolgan eski seed kategoriyalarni o'chiradi (09-vazifa, bir martalik)."""
+    has_active = exists().where(
+        PriceItem.category_id == Category.id,
+        PriceItem.is_active.is_(True),
+    )
+    ids = (
+        await db.execute(
+            select(Category.id).where(
+                Category.user_id == user.id,
+                Category.name.in_(SEED_CATEGORY_NAMES),
+                ~has_active,
+            )
+        )
+    ).scalars().all()
+    if ids:
+        await db.execute(delete(Category).where(Category.id.in_(ids)))
+        await db.commit()
+    return {"deleted": len(ids)}
 
 
 @router.patch("/{cat_id}", response_model=CategoryRead)
