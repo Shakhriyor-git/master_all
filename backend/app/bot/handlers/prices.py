@@ -1,5 +1,7 @@
 """Narxlarim — katalog (price_items) va obyekt narxlari ko'rinishi."""
 
+from decimal import Decimal
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -9,9 +11,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot import keyboards as kb
 from app.bot import repo, texts
-from app.bot.keyboards import CatalogCb, KindCb, PageCb, ProjectCb, UnitCb
+from app.bot.keyboards import (
+    AmountOkCb,
+    CatalogCb,
+    KindCb,
+    PageCb,
+    ProjectCb,
+    UnitCb,
+)
 from app.bot.states import NewPriceItem
-from app.bot.utils import fmt_money, fmt_unit, paginate, parse_quantity
+from app.bot.utils import fmt_money, fmt_unit, paginate, parse_money
 from app.models import PriceItem, ProjectPrice, User
 
 router = Router(name="prices")
@@ -138,13 +147,36 @@ async def pi_unit(
 
 
 @router.message(NewPriceItem.price, F.text)
-async def pi_price(
-    message: Message, state: FSMContext, session: AsyncSession, user: User
-) -> None:
-    price = parse_quantity(message.text)
+async def pi_price(message: Message, state: FSMContext) -> None:
+    price = parse_money(message.text)
     if price is None:
         await message.answer(texts.BAD_PRICE)
         return
+    data = await state.get_data()
+    await state.update_data(price=str(price))
+    await state.set_state(NewPriceItem.price_confirm)
+    await message.answer(
+        texts.render_price_confirm(data["name"], price, data["unit"]),
+        reply_markup=kb.amount_ok_kb(),
+    )
+
+
+@router.callback_query(NewPriceItem.price_confirm, AmountOkCb.filter())
+async def pi_price_confirm(
+    callback: CallbackQuery,
+    callback_data: AmountOkCb,
+    state: FSMContext,
+    session: AsyncSession,
+    user: User,
+) -> None:
+    if not callback_data.ok:
+        await state.set_state(NewPriceItem.price)
+        await callback.message.answer(
+            texts.ASK_PI_PRICE, reply_markup=kb.cancel_kb()
+        )
+        await callback.answer()
+        return
+
     data = await state.get_data()
     await state.clear()
 
@@ -153,22 +185,26 @@ async def pi_price(
         name=data["name"],
         kind=data["kind"],
         unit=data["unit"],
-        default_price=price,
+        default_price=Decimal(data["price"]),
     )
     session.add(item)
     try:
         await session.commit()
     except IntegrityError:
         await session.rollback()
-        await message.answer(
+        await callback.message.answer(
             "Bu nom va tur bo'yicha pozitsiya allaqachon bor.",
             reply_markup=kb.main_menu(),
         )
-        await _show_catalog(message, session, user, 1)
+        await _show_catalog(callback.message, session, user, 1)
+        await callback.answer()
         return
 
-    await message.answer(texts.PRICE_ADDED, reply_markup=kb.main_menu())
-    await _show_catalog(message, session, user, 1)
+    await callback.message.answer(
+        texts.PRICE_ADDED, reply_markup=kb.main_menu()
+    )
+    await _show_catalog(callback.message, session, user, 1)
+    await callback.answer()
 
 
 # --------------------------------------------------------------------------

@@ -18,7 +18,8 @@ from app.services.catalog_seed import HIDDEN_PICKER_UNITS, SYSTEM_UNITS
 # callback_data
 # --------------------------------------------------------------------------
 class ProjectCb(CallbackData, prefix="prj"):
-    action: str  # open | work | material | payment | report | prices | close | list
+    # open | work | material | expense | payment | report | prices | close | list | undo
+    action: str
     project_id: int
 
 
@@ -55,6 +56,12 @@ class ConfirmCb(CallbackData, prefix="cf"):
     ok: int
 
 
+class AmountOkCb(CallbackData, prefix="amt"):
+    """Narx / summa tasdig'i: 1 = Ha, 0 = Qayta yozish."""
+
+    ok: int
+
+
 class CatalogCb(CallbackData, prefix="cat"):
     action: str  # add | del
     item_id: int = 0
@@ -63,6 +70,20 @@ class CatalogCb(CallbackData, prefix="cat"):
 class ImportCb(CallbackData, prefix="imp"):
     project_id: int
     yes: int
+
+
+class CategoryCb(CallbackData, prefix="ecat"):
+    category_id: int  # 0 => kategoriyasiz
+
+
+class PurposeCb(CallbackData, prefix="pur"):
+    value: str  # labor | budget
+
+
+class BackCb(CallbackData, prefix="back"):
+    """FSM oqimida bir qadam orqaga."""
+
+    step: str = ""  # ixtiyoriy: qaysi qadamga
 
 
 # --------------------------------------------------------------------------
@@ -82,6 +103,23 @@ def cancel_kb() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
     kb.button(text=texts.BTN_CANCEL)
     return kb.as_markup(resize_keyboard=True)
+
+
+def back_cancel_kb() -> ReplyKeyboardMarkup:
+    """Matn kiritiladigan qadamlar uchun: [◀️ Orqaga] [❌ Bekor qilish]."""
+    kb = ReplyKeyboardBuilder()
+    kb.button(text=texts.BTN_BACK)
+    kb.button(text=texts.BTN_CANCEL)
+    kb.adjust(2)
+    return kb.as_markup(resize_keyboard=True)
+
+
+def _back_row(kb: InlineKeyboardBuilder) -> None:
+    kb.row(
+        InlineKeyboardButton(
+            text=texts.BTN_BACK, callback_data=BackCb().pack()
+        )
+    )
 
 
 def skip_cancel_kb() -> ReplyKeyboardMarkup:
@@ -131,14 +169,31 @@ def projects_list_kb(projects: Sequence, page: int, total: int) -> InlineKeyboar
 def project_card_kb(project_id: int) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     a = {"project_id": project_id}
-    kb.button(text="🔨 Ish qo'shish", callback_data=ProjectCb(action="work", **a))
+    kb.button(text="🔨 Ish", callback_data=ProjectCb(action="work", **a))
     kb.button(text="🧱 Material", callback_data=ProjectCb(action="material", **a))
+    kb.button(text="🧾 Xarajat", callback_data=ProjectCb(action="expense", **a))
     kb.button(text="💵 To'lov", callback_data=ProjectCb(action="payment", **a))
     kb.button(text="📊 Hisobot", callback_data=ProjectCb(action="report", **a))
     kb.button(text="⚙️ Narxlar", callback_data=ProjectCb(action="prices", **a))
+    kb.button(
+        text="↩️ Oxirgini bekor qilish",
+        callback_data=ProjectCb(action="undo", **a),
+    )
     kb.button(text="✅ Yopish", callback_data=ProjectCb(action="close", **a))
     kb.button(text="⬅️ Ro'yxatga", callback_data=ProjectCb(action="list", **a))
-    kb.adjust(2, 2, 2, 1)
+    kb.adjust(3, 3, 1, 2)
+    return kb.as_markup()
+
+
+def category_pick_kb(buckets: Sequence) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    for b in buckets:
+        kb.row(
+            InlineKeyboardButton(
+                text=f"{b.label} · {b.count}"[:60],
+                callback_data=CategoryCb(category_id=b.id).pack(),
+            )
+        )
     return kb.as_markup()
 
 
@@ -165,17 +220,19 @@ def price_pick_kb(
         )
     )
     _nav_row(kb, "pick", page, total, project_id=project_id, kind=kind)
+    _back_row(kb)
     return kb.as_markup()
 
 
-def unit_kb() -> InlineKeyboardMarkup:
-    # B8: bu ro'yxat ustaning `units` jadvalidan olinadi. Hozircha standart.
+def unit_kb(*, back: bool = False) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for code, label in SYSTEM_UNITS:
         if code in HIDDEN_PICKER_UNITS:
             continue
         kb.button(text=label, callback_data=UnitCb(value=code))
     kb.adjust(4)
+    if back:
+        _back_row(kb)
     return kb.as_markup()
 
 
@@ -184,15 +241,37 @@ def paid_by_kb() -> InlineKeyboardMarkup:
     kb.button(text="Men to'ladim", callback_data=PaidByCb(value="master"))
     kb.button(text="Mijoz to'ladi", callback_data=PaidByCb(value="client"))
     kb.adjust(2)
+    _back_row(kb)
     return kb.as_markup()
 
 
 def method_kb() -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
-    kb.button(text="Naqd", callback_data=MethodCb(value="cash"))
-    kb.button(text="Karta", callback_data=MethodCb(value="card"))
-    kb.button(text="O'tkazma", callback_data=MethodCb(value="transfer"))
+    kb.button(text="💵 Naqd", callback_data=MethodCb(value="cash"))
+    kb.button(text="💳 Karta", callback_data=MethodCb(value="card"))
+    kb.button(text="🏦 O'tkazma", callback_data=MethodCb(value="transfer"))
     kb.adjust(3)
+    _back_row(kb)
+    return kb.as_markup()
+
+
+def amount_ok_kb() -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text="✅ Ha", callback_data=AmountOkCb(ok=1))
+    kb.button(text="✏️ Qayta yozish", callback_data=AmountOkCb(ok=0))
+    kb.adjust(2)
+    return kb.as_markup()
+
+
+def purpose_kb() -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(
+        text="💵 Ish haqi uchun", callback_data=PurposeCb(value="labor")
+    )
+    kb.button(
+        text="🧾 Xarajat uchun", callback_data=PurposeCb(value="budget")
+    )
+    kb.adjust(1)
     return kb.as_markup()
 
 
@@ -209,6 +288,7 @@ def confirm_kb() -> InlineKeyboardMarkup:
     kb.button(text="✅ Saqlash", callback_data=ConfirmCb(ok=1))
     kb.button(text="❌ Bekor", callback_data=ConfirmCb(ok=0))
     kb.adjust(2)
+    _back_row(kb)
     return kb.as_markup()
 
 

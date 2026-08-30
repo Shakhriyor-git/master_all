@@ -31,6 +31,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/code
+      - avatars:/data/avatars
     ports:
       - "8000:8000"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -49,3 +50,4 @@ services:
 
 volumes:
   pgdata:
+  avatars:

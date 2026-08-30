@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser, DbSession, OwnedProject
 from app.models import Payment, Project, User
+from app.models.enums import PaymentPurpose
 from app.schemas.payment import PaymentCreate, PaymentRead, PaymentUpdate
 
 router = APIRouter(prefix="/api", tags=["payments"])
@@ -38,15 +39,18 @@ async def _owned_payment(
 @router.get(
     "/projects/{project_id}/payments", response_model=list[PaymentRead]
 )
-async def list_payments(project: OwnedProject, db: DbSession):
-    stmt = (
-        select(Payment)
-        .where(
-            Payment.project_id == project.id,
-            Payment.deleted_at.is_(None),
-        )
-        .order_by(Payment.paid_at.desc(), Payment.id.desc())
+async def list_payments(
+    project: OwnedProject,
+    db: DbSession,
+    purpose: PaymentPurpose | None = None,
+):
+    stmt = select(Payment).where(
+        Payment.project_id == project.id,
+        Payment.deleted_at.is_(None),
     )
+    if purpose is not None:
+        stmt = stmt.where(Payment.purpose == purpose)
+    stmt = stmt.order_by(Payment.paid_at.desc(), Payment.id.desc())
     return (await db.execute(stmt)).scalars().all()
 
 
@@ -66,6 +70,7 @@ async def create_payment(
         created_by_user_id=user.id,
         amount=payload.amount,
         method=payload.method,
+        purpose=payload.purpose,
         note=payload.note,
     )
     if payload.paid_at is not None:

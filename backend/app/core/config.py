@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "http://localhost:5173"
 
+    # Media (avatarlar) — named volume; /media/ orqali statik beriladi
+    media_root: str = "/data"
+
     # AI (keyingi bosqichda)
     gemini_api_key: str = ""
     groq_api_key: str = ""
@@ -46,6 +49,10 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def avatar_dir(self) -> str:
+        return f"{self.media_root}/avatars"
 
     @property
     def is_production(self) -> bool:

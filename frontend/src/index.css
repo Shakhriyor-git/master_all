@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Mavzu o'zgaruvchilari — hech qayerda rang qotirilmaydi ===== */
+:root,
+:root[data-theme='light'] {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --primary: #2563eb;
+  --primary-soft: #dce7fd;
+  --on-primary: #ffffff;
+  --text: #1e293b;
+  --text-muted: #757681;
+  --text-faint: #9aa0aa;
+  --accent: #bc4800;
+  --accent-soft: #fbe3da;
+  --success: #0b5c3e;
+  --success-soft: #d6f0e4;
+  --danger: #c0392b;
+  --danger-soft: #fbe0dc;
+  --border: #e2e6ec;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b0b10;
+  --surface: #16161f;
+  --surface-2: #1f1f2b;
+  --primary: #8b5cf6;
+  --primary-soft: #2a1f4a;
+  --on-primary: #ffffff;
+  --text: #f1f1f5;
+  --text-muted: #9a9aa8;
+  --text-faint: #6e6e7c;
+  --accent: #e2703a;
+  --accent-soft: #3a2418;
+  --success: #6fe0b0;
+  --success-soft: #14382b;
+  --danger: #e5564a;
+  --danger-soft: #3a1d1a;
+  --border: #2a2a38;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}

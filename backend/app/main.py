@@ -1,10 +1,22 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import entries, health, payments, prices, projects
+from app.api.routes import (
+    categories,
+    entries,
+    health,
+    me,
+    notes,
+    payments,
+    prices,
+    projects,
+    units,
+)
 from app.core.config import settings
 
 logging.basicConfig(
@@ -17,6 +29,7 @@ log = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("Ishga tushmoqda: env=%s", settings.env)
+    Path(settings.avatar_dir).mkdir(parents=True, exist_ok=True)
     # Keyinchalik shu yerda bot webhook o'rnatiladi
     yield
     log.info("To'xtatilmoqda")
@@ -39,8 +52,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+Path(settings.media_root).mkdir(parents=True, exist_ok=True)
+app.mount(
+    "/media",
+    StaticFiles(directory=settings.media_root, check_dir=False),
+    name="media",
+)
+
 app.include_router(health.router, tags=["health"])
+app.include_router(me.router)
 app.include_router(projects.router)
+app.include_router(categories.router)
+app.include_router(units.router)
 app.include_router(prices.router)
 app.include_router(entries.router)
 app.include_router(payments.router)
+app.include_router(notes.router)

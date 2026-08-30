@@ -18,6 +18,7 @@ BTN_MY_PRICES = "💰 Narxlarim"
 BTN_HELP = "❓ Yordam"
 BTN_CANCEL = "❌ Bekor qilish"
 BTN_SKIP = "⏭ O'tkazib yuborish"
+BTN_BACK = "◀️ Orqaga"
 
 # --- Umumiy ---
 GREETING = (
@@ -52,7 +53,8 @@ IMPORT_OFFER = (
 IMPORT_DONE = "{n} ta pozitsiya nusxalandi."
 IMPORT_SKIPPED = "Yaxshi, keyinroq obyekt ichidan qo'shishingiz mumkin."
 
-# --- Ish / material ---
+# --- Ish / material / xarajat ---
+ASK_CATEGORY = "Qaysi bo'lim?"
 ASK_PICK_WORK = "Qaysi ish? Ro'yxatdan tanlang yoki «➕ Boshqa ish»:"
 ASK_PICK_MATERIAL = "Qaysi material? Ro'yxatdan tanlang yoki «➕ Boshqa material»:"
 ASK_QUANTITY = "Miqdorini yozing ({unit}). Masalan: <code>11.5</code> yoki <code>11,5</code>"
@@ -61,10 +63,22 @@ ASK_NEW_NAME = "Yangi pozitsiya nomi?"
 ASK_NEW_UNIT = "O'lchov birligi?"
 ASK_NEW_PRICE = "Bir birlik narxi (so'm)? Masalan: <code>25000</code>"
 BAD_PRICE = "Faqat raqam kiriting, masalan: 25000"
-ASK_PAID_BY = "Bu materialni kim to'ladi?"
+CONFIRM_QUESTION = "To'g'rimi?"
+ASK_PAID_BY = "Kim to'ladi?"
+ASK_METHOD = "Qanday to'landi?"
 ENTRY_SAVED = "Saqlandi."
 
+# --- Xarajat ---
+ASK_EXPENSE_NAME = "Xarajat nomi? (masalan: <i>Tushlik</i>, <i>Taksi</i>)"
+ASK_EXPENSE_AMOUNT = "Xarajat summasi (so'm)? Masalan: <code>35000</code>"
+
+# --- Oxirgini bekor qilish ---
+UNDO_NONE = "Bekor qilinadigan yozuv yo'q."
+UNDO_OLD = "Yozuv 5 daqiqadan eski — endi bekor qilib bo'lmaydi."
+UNDO_OK = "Oxirgi yozuv bekor qilindi: {name}"
+
 # --- To'lov ---
+ASK_PAYMENT_PURPOSE = "To'lov nima uchun?"
 ASK_PAYMENT_AMOUNT = "To'lov summasi (so'm)? Masalan: <code>2000000</code>"
 ASK_PAYMENT_METHOD = "To'lov usuli?"
 PAYMENT_SAVED = "To'lov qayd qilindi."
@@ -88,6 +102,16 @@ KIND_UZ = {"work": "ish", "material": "material", "expense": "xarajat"}
 
 def esc(value: object) -> str:
     return html.escape(str(value)) if value is not None else ""
+
+
+def render_price_confirm(name: str, price: Decimal, unit: str | None) -> str:
+    """'Oboy yopishtirish — 20 000 so'm / m²\\nTo'g'rimi?'"""
+    tail = f" / {fmt_unit(unit)}" if unit and unit != "summa" else ""
+    return f"{esc(name)} — <b>{fmt_money(price)}</b>{tail}\n{CONFIRM_QUESTION}"
+
+
+def render_amount_confirm(amount: Decimal) -> str:
+    return f"<b>{fmt_money(amount)}</b>\n{CONFIRM_QUESTION}"
 
 
 def render_owes_line(client_owes: Decimal) -> str:

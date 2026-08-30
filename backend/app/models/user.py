@@ -32,6 +32,12 @@ class User(TimestampMixin, Base):
     language: Mapped[str] = mapped_column(
         String(8), nullable=False, server_default="uz"
     )
+    # light / dark / auto — Mini App mavzusi
+    theme: Mapped[str] = mapped_column(
+        String(10), nullable=False, server_default="auto"
+    )
+    # yuklangan avatar yo'li; bo'sh bo'lsa Telegram rasmi ishlatiladi
+    avatar_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )

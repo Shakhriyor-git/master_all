@@ -152,6 +152,30 @@ async def back_to_list(
     await _show_list(callback, session, user, 1)
 
 
+@router.callback_query(ProjectCb.filter(F.action == "undo"))
+async def undo_last(
+    callback: CallbackQuery,
+    callback_data: ProjectCb,
+    session: AsyncSession,
+    user: User,
+) -> None:
+    project = await repo.get_owned_project(
+        session, user.id, callback_data.project_id
+    )
+    if project is None:
+        await callback.answer(texts.ERROR, show_alert=True)
+        return
+    status_, entry = await repo.undo_last_entry(session, project.id)
+    if status_ == "none":
+        await callback.answer(texts.UNDO_NONE, show_alert=True)
+        return
+    if status_ == "old":
+        await callback.answer(texts.UNDO_OLD, show_alert=True)
+        return
+    await callback.answer(texts.UNDO_OK.format(name=entry.name), show_alert=True)
+    await send_project_card(callback, session, project, edit=True)
+
+
 @router.callback_query(ProjectCb.filter(F.action == "close"))
 async def close_project(
     callback: CallbackQuery,

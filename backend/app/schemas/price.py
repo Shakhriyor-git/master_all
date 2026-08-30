@@ -33,13 +33,36 @@ class PriceItemRead(BaseModel):
 
     id: int
     user_id: int
+    category_id: int | None
     name: str
     kind: str
     unit: str
     default_price: Decimal
     is_active: bool
+    # JOIN'dan — frontend qo'shimcha so'rov yubormasin
+    category_name: str | None = None
+    unit_label: str | None = None
     created_at: datetime
     updated_at: datetime | None
+
+
+class PriceItemBulkRow(BaseModel):
+    id: int
+    default_price: Decimal = Field(ge=0)
+
+
+class PriceItemBulkUpdate(BaseModel):
+    items: list[PriceItemBulkRow] = Field(min_length=1, max_length=50)
+
+
+class PriceSyncResult(BaseModel):
+    """POST /api/projects/{id}/prices/{price_id}/sync — UI tasdiq so'rashi uchun."""
+
+    price_id: int
+    name: str
+    old_price: Decimal
+    new_price: Decimal
+    changed: bool
 
 
 class ProjectPriceCreate(BaseModel):

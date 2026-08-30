@@ -31,6 +31,7 @@ from app.models.enums import (  # noqa: E402
     PaymentMethod,
     ProjectStatus,
 )
+from app.services.catalog_seed import seed_catalog_for_user  # noqa: E402
 
 # Test usta — Telegram ID int32 dan katta, konfliktdan xoli
 TEST_TELEGRAM_ID = 999_000_001
@@ -86,6 +87,9 @@ async def main() -> None:
                 "phone": "+998900000000",
             },
         )
+
+        # Standart katalog (birliklar + kategoriyalar) — idempotent
+        await seed_catalog_for_user(session, user.id)
 
         project, _ = await get_or_create(
             session,
