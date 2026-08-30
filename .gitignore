@@ -27,6 +27,11 @@ uploads/
 *.dump
 *.sql.gz
 
+# --- Prod deploy ---
+.env.prod
+backups/
+frontend-dist/
+
 # --- IDE / OS ---
 .idea/
 .vscode/

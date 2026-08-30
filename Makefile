@@ -1,4 +1,4 @@
-.PHONY: up down logs sh db lint fmt
+.PHONY: up down logs sh db lint fmt prod-up prod-down prod-logs prod-migrate prod-backup
 
 up:
 	docker compose up -d --build
@@ -20,3 +20,18 @@ lint:
 
 fmt:
 	docker compose exec api ruff format app
+
+prod-up:
+	docker compose -f docker-compose.prod.yml up -d --build
+
+prod-down:
+	docker compose -f docker-compose.prod.yml down
+
+prod-logs:
+	docker compose -f docker-compose.prod.yml logs -f api
+
+prod-migrate:
+	docker compose -f docker-compose.prod.yml exec api alembic upgrade head
+
+prod-backup:
+	bash scripts/backup.sh

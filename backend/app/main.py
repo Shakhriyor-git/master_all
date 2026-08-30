@@ -17,6 +17,11 @@ from app.api.routes import (
     projects,
     units,
 )
+from app.bot.webhook import (
+    attach_bot_webhook,
+    start_bot_webhook,
+    stop_bot_webhook,
+)
 from app.core.config import settings
 
 logging.basicConfig(
@@ -30,8 +35,11 @@ log = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     log.info("Ishga tushmoqda: env=%s", settings.env)
     Path(settings.avatar_dir).mkdir(parents=True, exist_ok=True)
-    # Keyinchalik shu yerda bot webhook o'rnatiladi
+    if settings.bot_use_webhook:
+        await start_bot_webhook()
     yield
+    if settings.bot_use_webhook:
+        await stop_bot_webhook()
     log.info("To'xtatilmoqda")
 
 
@@ -68,3 +76,6 @@ app.include_router(prices.router)
 app.include_router(entries.router)
 app.include_router(payments.router)
 app.include_router(notes.router)
+
+# BOT_USE_WEBHOOK=true bo'lsa POST /tg/{secret} route'ini qo'shadi
+attach_bot_webhook(app)
