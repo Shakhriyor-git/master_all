@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import CurrentUser, DbSession
@@ -14,6 +14,7 @@ from app.schemas.note import (
     NoteItemCreate,
     NoteItemRead,
     NoteItemUpdate,
+    NoteListRead,
     NoteRead,
     NoteUpdate,
 )
@@ -55,17 +56,35 @@ async def _check_project(project_id: int, user: User, db: DbSession) -> None:
         )
 
 
-@router.get("", response_model=list[NoteRead])
+@router.get("", response_model=list[NoteListRead])
 async def list_notes(
     user: CurrentUser, db: DbSession, project_id: int | None = None
 ):
-    stmt = select(Note).where(
-        Note.user_id == user.id, Note.deleted_at.is_(None)
+    """Bitta agregat so'rov: LEFT JOIN + GROUP BY bilan elementlar sanog'i."""
+    items_total = func.count(NoteItem.id)
+    items_done = func.count(NoteItem.id).filter(NoteItem.is_done.is_(True))
+
+    stmt = (
+        select(
+            Note,
+            items_total.label("items_total"),
+            items_done.label("items_done"),
+        )
+        .outerjoin(NoteItem, NoteItem.note_id == Note.id)
+        .where(Note.user_id == user.id, Note.deleted_at.is_(None))
+        .group_by(Note.id)
+        .order_by(Note.is_pinned.desc(), Note.created_at.desc())
     )
     if project_id is not None:
         stmt = stmt.where(Note.project_id == project_id)
-    stmt = stmt.order_by(Note.is_pinned.desc(), Note.created_at.desc())
-    return (await db.execute(stmt)).scalars().all()
+
+    result = []
+    for note, total, done in (await db.execute(stmt)).all():
+        row = NoteListRead.model_validate(note)
+        row.items_total = total
+        row.items_done = done
+        result.append(row)
+    return result
 
 
 @router.post(

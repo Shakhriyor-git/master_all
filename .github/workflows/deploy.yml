@@ -72,7 +72,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 10); do
-            if curl -fsS "https://${{ secrets.DOMAIN }}/api/health" > /tmp/health.json; then
+            if curl -fsS "https://${{ secrets.DOMAIN }}/health" > /tmp/health.json; then
               cat /tmp/health.json
               exit 0
             fi

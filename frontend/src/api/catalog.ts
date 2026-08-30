@@ -61,3 +61,54 @@ export const createPriceItem = (body: {
     method: 'POST',
     body: JSON.stringify(body),
   })
+
+export const updatePriceItem = (
+  id: number,
+  body: {
+    category_id?: number | null
+    name?: string
+    unit?: string
+    default_price?: number | string
+  },
+) =>
+  api<PriceItem>(`/api/price-items/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
+export const deletePriceItem = (id: number) =>
+  api<void>(`/api/price-items/${id}`, { method: 'DELETE' })
+
+/** Bir so'rovda 50 tagacha pozitsiya narxini yangilaydi. */
+export const bulkUpdatePriceItems = (
+  items: { id: number; default_price: number | string }[],
+) =>
+  api<PriceItem[]>('/api/price-items/bulk', {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  })
+
+export const createCategory = (body: {
+  name: string
+  kind: 'work' | 'material'
+  icon?: string | null
+}) =>
+  api<Category>('/api/categories', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const updateCategory = (
+  id: number,
+  body: { name?: string; icon?: string | null; is_active?: boolean },
+) =>
+  api<Category>(`/api/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
+export const deleteCategory = (id: number) =>
+  api<void>(`/api/categories/${id}`, { method: 'DELETE' })
+
+export const createUnit = (body: { code: string; label: string }) =>
+  api<Unit>('/api/units', { method: 'POST', body: JSON.stringify(body) })

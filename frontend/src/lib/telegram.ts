@@ -16,6 +16,15 @@ export function getInitData(): string {
   }
 }
 
+/** initData imzosiz — faqat ko'rinish uchun (rasm), ishonchli emas. */
+export function getTelegramPhotoUrl(): string | null {
+  try {
+    return WebApp.initDataUnsafe?.user?.photo_url ?? null
+  } catch {
+    return null
+  }
+}
+
 export function initTelegram(): void {
   try {
     WebApp.ready()

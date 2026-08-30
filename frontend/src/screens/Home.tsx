@@ -77,7 +77,11 @@ export function Home() {
           label={owes < 0 ? 'Mijoz avansi' : 'Mijoz qarzi'}
           value={fmtMoney(Math.abs(owes))}
         />
-        <MiniCard label="Budjet qoldig‘i" value={fmtMoney(budgetLeft)} />
+        <MiniCard
+          label="Budjet qoldig‘i"
+          value={fmtMoney(budgetLeft)}
+          to="/budget"
+        />
       </div>
 
       <ProjectPicker
@@ -154,11 +158,27 @@ function Block({
   )
 }
 
-function MiniCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-card border border-border bg-surface p-3">
+function MiniCard({
+  label,
+  value,
+  to,
+}: {
+  label: string
+  value: string
+  to?: string
+}) {
+  const inner = (
+    <>
       <div className="text-label text-text-muted">{label}</div>
       <div className="mt-0.5 text-body text-text">{value}</div>
-    </div>
+    </>
+  )
+  const cls = 'block rounded-card border border-border bg-surface p-3'
+  return to ? (
+    <Link to={to} className={`${cls} active:scale-[0.99]`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   )
 }

@@ -1,5 +1,5 @@
 import { forwardRef, useLayoutEffect, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react'
 import {
   caretAfterDigits,
   moneyDisplay,
@@ -14,6 +14,8 @@ interface Props {
   autoFocus?: boolean
   id?: string
   'aria-label'?: string
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 
 /**

@@ -52,5 +52,12 @@ class NoteRead(BaseModel):
     updated_at: datetime | None
 
 
+class NoteListRead(NoteRead):
+    """Ro'yxat kartasi uchun — ro'yxat elementlari sanog'i badge sifatida."""
+
+    items_done: int = 0
+    items_total: int = 0
+
+
 class NoteDetailRead(NoteRead):
     items: list[NoteItemRead] = Field(default_factory=list)
