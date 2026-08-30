@@ -1,13 +1,15 @@
-import { IconChevronRight, IconSelector } from '@tabler/icons-react'
+import { IconChevronRight, IconPlus, IconSelector } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Entry, EntryKind } from '../api/entries'
+import { AddPaymentSheet } from '../components/AddPaymentSheet'
 import { EmptyState, Screen } from '../components/Screen'
 import { ProjectPicker } from '../components/ProjectPicker'
 import { SplashSkeleton } from '../components/states'
 import { useActiveProject } from '../hooks/activeProjectContext'
 import { useRecentEntries, useSummary } from '../hooks/useEntries'
-import { KIND_AMOUNT, KIND_LABEL } from '../lib/entryVisual'
+import { usePayments } from '../hooks/usePayments'
+import { KIND_AMOUNT, KIND_LABEL, PURPOSE_LABEL } from '../lib/entryVisual'
 import { fmtMoney, fmtQty } from '../lib/format'
 
 export function Home() {
@@ -71,6 +73,8 @@ export function Home() {
         title="Xarajatlar"
         hideIfEmpty
       />
+
+      <PaymentsBlock projectId={active.id} />
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <MiniCard
@@ -154,6 +158,63 @@ function Block({
           <IconChevronRight size={14} />
         </button>
       </div>
+    </section>
+  )
+}
+
+function PaymentsBlock({ projectId }: { projectId: number }) {
+  const { data: payments = [] } = usePayments(projectId)
+  const [addOpen, setAddOpen] = useState(false)
+  const recent = payments.slice(0, 3)
+
+  return (
+    <section className="mt-4">
+      <div className="mb-1.5 flex items-center justify-between">
+        <h2 className="text-label uppercase text-text-muted">
+          Mijoz to‘lovlari
+        </h2>
+        {payments.length > 0 && (
+          <Link to="/history?kind=payment" className="text-label text-primary">
+            Barchasi
+          </Link>
+        )}
+      </div>
+
+      <div className="overflow-hidden rounded-card border border-border bg-surface">
+        {recent.length === 0 ? (
+          <p className="px-3 py-3 text-label text-text-faint">
+            Hali to‘lov yo‘q
+          </p>
+        ) : (
+          recent.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2 last:border-b-0"
+            >
+              <span className="truncate text-label text-text-muted">
+                {PURPOSE_LABEL[p.purpose]}
+              </span>
+              <span className="shrink-0 text-body text-success">
+                + {fmtMoney(p.amount)}
+              </span>
+            </div>
+          ))
+        )}
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="flex w-full items-center justify-center gap-1 border-t border-dashed border-border py-2.5 text-label text-primary active:bg-surface-2"
+        >
+          + To‘lov qo‘shish
+          <IconPlus size={14} />
+        </button>
+      </div>
+
+      <AddPaymentSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        projectId={projectId}
+      />
     </section>
   )
 }

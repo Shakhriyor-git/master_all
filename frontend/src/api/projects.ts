@@ -18,6 +18,23 @@ export interface Project {
 export const listProjects = (status?: string) =>
   api<Project[]>(`/api/projects${status ? `?status=${status}` : ''}`)
 
+export interface ProjectPatch {
+  title?: string
+  address?: string | null
+  client_name?: string | null
+  client_phone?: string | null
+  status?: 'active' | 'paused' | 'completed' | 'archived'
+}
+
+export const updateProject = (id: number, body: ProjectPatch) =>
+  api<Project>(`/api/projects/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
+export const deleteProject = (id: number) =>
+  api<void>(`/api/projects/${id}`, { method: 'DELETE' })
+
 export interface Summary {
   labor: {
     works_total: string

@@ -289,6 +289,37 @@ async def delete_last_entry(project: OwnedProject, db: DbSession):
     return entry
 
 
+@router.get("/entries/{entry_id}", response_model=EntryDetailRead)
+async def get_entry(entry_id: int, user: CurrentUser, db: DbSession):
+    """Bitta yozuv — batafsil oyna uchun (JOIN bilan)."""
+    row = (
+        await db.execute(
+            select(Entry, Category.name, MeasureUnit.label)
+            .join(Project, Project.id == Entry.project_id)
+            .outerjoin(ProjectPrice, ProjectPrice.id == Entry.project_price_id)
+            .outerjoin(PriceItem, PriceItem.id == ProjectPrice.price_item_id)
+            .outerjoin(Category, Category.id == PriceItem.category_id)
+            .outerjoin(
+                MeasureUnit,
+                (MeasureUnit.user_id == user.id)
+                & (MeasureUnit.code == Entry.unit),
+            )
+            .where(
+                Entry.id == entry_id,
+                Entry.deleted_at.is_(None),
+                Project.user_id == user.id,
+                Project.deleted_at.is_(None),
+            )
+        )
+    ).first()
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Yozuv topilmadi"
+        )
+    entry, cat_name, unit_label = row
+    return _detail(entry, cat_name, unit_label)
+
+
 @router.patch("/entries/{entry_id}", response_model=EntryRead)
 async def update_entry(
     entry_id: int, payload: EntryUpdate, user: CurrentUser, db: DbSession

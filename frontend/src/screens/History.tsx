@@ -1,48 +1,59 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { Entry, EntryKind } from '../api/entries'
-import { EntryCard } from '../components/EntryCard'
+import { IconSelector } from '@tabler/icons-react'
+import type {
+  TimelineItem,
+  TimelineKind,
+  TimelinePayment,
+} from '../api/timeline'
 import { EntryDetailSheet } from '../components/EntryDetailSheet'
+import { PaymentCard } from '../components/PaymentCard'
+import { PaymentDetailSheet } from '../components/PaymentDetailSheet'
 import { ProjectPicker } from '../components/ProjectPicker'
 import { EmptyState, Screen } from '../components/Screen'
 import { Segment } from '../components/Segment'
 import { SplashSkeleton } from '../components/states'
+import { TimelineEntryCard } from '../components/TimelineEntryCard'
 import { useActiveProject } from '../hooks/activeProjectContext'
-import { useDeleteEntry, useEntries } from '../hooks/useEntries'
+import { useEntry } from '../hooks/useEntry'
+import { useDeleteEntry } from '../hooks/useEntries'
+import { useTimeline } from '../hooks/useTimeline'
 import { fmtDateGroup } from '../lib/format'
 import { confirmDialog, hapticSuccess } from '../lib/telegram'
-import { IconSelector } from '@tabler/icons-react'
 
-type FilterKind = 'all' | EntryKind
+type FilterKind = 'all' | TimelineKind
 
 const FILTERS: { value: FilterKind; label: string }[] = [
   { value: 'all', label: 'Barchasi' },
   { value: 'work', label: 'Ishlar' },
   { value: 'material', label: 'Material' },
   { value: 'expense', label: 'Xarajat' },
+  { value: 'payment', label: "To'lovlar" },
 ]
 
 export function History() {
   const { active, projects, isLoading, setActive } = useActiveProject()
   const [params, setParams] = useSearchParams()
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [selected, setSelected] = useState<Entry | null>(null)
+  const [entryId, setEntryId] = useState<number | null>(null)
+  const [payment, setPayment] = useState<TimelinePayment | null>(null)
 
   const kindParam = params.get('kind') as FilterKind | null
   const filter: FilterKind =
     kindParam && FILTERS.some((f) => f.value === kindParam) ? kindParam : 'all'
 
-  const q = useEntries({
-    projectId: active?.id ?? 0,
-    kind: filter === 'all' ? undefined : filter,
-  })
+  const q = useTimeline(
+    active?.id ?? 0,
+    filter === 'all' ? undefined : filter,
+  )
   const del = useDeleteEntry(active?.id ?? 0)
+  const selectedEntry = useEntry(entryId)
 
-  const entries = useMemo(
+  const items = useMemo(
     () => q.data?.pages.flatMap((p) => p.items) ?? [],
     [q.data],
   )
-  const groups = useMemo(() => groupByDay(entries), [entries])
+  const groups = useMemo(() => groupByDay(items), [items])
 
   const sentinel = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -66,10 +77,10 @@ export function History() {
     )
   }
 
-  async function quickDelete(e: Entry) {
+  async function quickDelete(id: number) {
     const ok = await confirmDialog('Bu yozuv o‘chirilsinmi?')
     if (!ok) return
-    await del.mutateAsync(e.id)
+    await del.mutateAsync(id)
     hapticSuccess()
   }
 
@@ -90,21 +101,25 @@ export function History() {
       }
     >
       <div className="sticky top-0 z-10 -mx-4 bg-bg px-4 pb-2">
-        <Segment
-          options={FILTERS}
-          value={filter}
-          onChange={(v) => {
-            const next = new URLSearchParams(params)
-            if (v === 'all') next.delete('kind')
-            else next.set('kind', v)
-            setParams(next, { replace: true })
-          }}
-        />
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="min-w-max">
+            <Segment
+              options={FILTERS}
+              value={filter}
+              onChange={(v) => {
+                const next = new URLSearchParams(params)
+                if (v === 'all') next.delete('kind')
+                else next.set('kind', v)
+                setParams(next, { replace: true })
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {q.isPending ? (
         <SkeletonList />
-      ) : entries.length === 0 ? (
+      ) : items.length === 0 ? (
         <EmptyState text="Bu bo‘limda hali yozuv yo‘q." />
       ) : (
         <div className="space-y-4">
@@ -114,14 +129,22 @@ export function History() {
                 {fmtDateGroup(g.date)}
               </h3>
               <div className="space-y-2">
-                {g.items.map((e) => (
-                  <EntryCard
-                    key={e.id}
-                    entry={e}
-                    onOpen={setSelected}
-                    onDelete={quickDelete}
-                  />
-                ))}
+                {g.items.map((it) =>
+                  it.type === 'payment' ? (
+                    <PaymentCard
+                      key={`p${it.id}`}
+                      payment={it}
+                      onOpen={setPayment}
+                    />
+                  ) : (
+                    <TimelineEntryCard
+                      key={`e${it.id}`}
+                      entry={it}
+                      onOpen={(e) => setEntryId(e.id)}
+                      onDelete={(e) => void quickDelete(e.id)}
+                    />
+                  ),
+                )}
               </div>
             </div>
           ))}
@@ -143,8 +166,13 @@ export function History() {
       />
       <EntryDetailSheet
         projectId={active.id}
-        entry={selected}
-        onClose={() => setSelected(null)}
+        entry={selectedEntry.data ?? null}
+        onClose={() => setEntryId(null)}
+      />
+      <PaymentDetailSheet
+        projectId={active.id}
+        payment={payment}
+        onClose={() => setPayment(null)}
       />
     </Screen>
   )
@@ -153,15 +181,20 @@ export function History() {
 interface DayGroup {
   key: string
   date: string
-  items: Entry[]
+  items: TimelineItem[]
 }
 
-function groupByDay(items: Entry[]): DayGroup[] {
+function itemDate(it: TimelineItem): string {
+  return it.type === 'payment' ? it.paid_at : it.entry_date
+}
+
+function groupByDay(items: TimelineItem[]): DayGroup[] {
   const map = new Map<string, DayGroup>()
-  for (const e of items) {
-    const key = e.entry_date.slice(0, 10)
-    if (!map.has(key)) map.set(key, { key, date: e.entry_date, items: [] })
-    map.get(key)!.items.push(e)
+  for (const it of items) {
+    const d = itemDate(it)
+    const key = d.slice(0, 10)
+    if (!map.has(key)) map.set(key, { key, date: d, items: [] })
+    map.get(key)!.items.push(it)
   }
   return [...map.values()]
 }

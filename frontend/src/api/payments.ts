@@ -38,5 +38,19 @@ export const createPayment = (projectId: number, body: CreatePaymentBody) =>
     body: JSON.stringify(body),
   })
 
+export interface UpdatePaymentBody {
+  amount?: number | string
+  method?: PayMethod
+  purpose?: PayPurpose
+  paid_at?: string
+  note?: string | null
+}
+
+export const updatePayment = (id: number, body: UpdatePaymentBody) =>
+  api<Payment>(`/api/payments/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
 export const deletePayment = (id: number) =>
   api<void>(`/api/payments/${id}`, { method: 'DELETE' })

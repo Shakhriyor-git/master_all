@@ -19,6 +19,7 @@ async def cmd_start(message: Message, state: FSMContext, user: User) -> None:
         texts.GREETING.format(name=texts.esc(user.full_name)),
         reply_markup=kb.main_menu(),
     )
+    await message.answer(texts.OPEN_APP_HINT, reply_markup=kb.open_app_kb())
 
 
 @router.message(Command("bekor"), StateFilter("*"))
@@ -28,9 +29,10 @@ async def cmd_cancel(message: Message, state: FSMContext) -> None:
     await message.answer(texts.CANCELLED, reply_markup=kb.main_menu())
 
 
+@router.message(Command("yordam"))
 @router.message(F.text == texts.BTN_HELP)
 async def show_help(message: Message) -> None:
-    await message.answer(texts.HELP, reply_markup=kb.main_menu())
+    await message.answer(texts.HELP, reply_markup=kb.open_app_kb())
 
 
 @router.callback_query(F.data == "noop")

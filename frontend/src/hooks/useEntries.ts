@@ -60,6 +60,7 @@ function invalidateProject(
 ) {
   qc.invalidateQueries({ queryKey: ['entries', projectId] })
   qc.invalidateQueries({ queryKey: ['summary', projectId] })
+  qc.invalidateQueries({ queryKey: ['timeline', projectId] })
 }
 
 export function useCreateEntry(projectId: number) {
@@ -85,6 +86,7 @@ export function useDeleteEntry(projectId: number) {
     mutationFn: (id: number) => deleteEntry(id),
     onMutate: async (id: number) => {
       await qc.cancelQueries({ queryKey: ['entries', projectId] })
+      await qc.cancelQueries({ queryKey: ['timeline', projectId] })
       const snapshots = qc.getQueriesData<{ pages: EntryPage[] }>({
         queryKey: ['entries', projectId],
       })
@@ -99,10 +101,28 @@ export function useDeleteEntry(projectId: number) {
           })),
         })
       }
-      return { snapshots }
+      // tarix lentasidan ham darhol olib tashlaymiz
+      const timeline = qc.getQueriesData<{
+        pages: { items: { type: string; id: number }[]; total: number }[]
+      }>({ queryKey: ['timeline', projectId] })
+      for (const [key, data] of timeline) {
+        if (!data) continue
+        qc.setQueryData(key, {
+          ...data,
+          pages: data.pages.map((pg) => ({
+            ...pg,
+            items: pg.items.filter(
+              (x) => !(x.type === 'entry' && x.id === id),
+            ),
+            total: Math.max(0, pg.total - 1),
+          })),
+        })
+      }
+      return { snapshots, timeline }
     },
     onError: (_e, _id, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data))
+      ctx?.timeline?.forEach(([key, data]) => qc.setQueryData(key, data))
     },
     onSettled: () => invalidateProject(qc, projectId),
   })

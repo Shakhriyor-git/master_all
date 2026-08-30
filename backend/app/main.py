@@ -15,6 +15,7 @@ from app.api.routes import (
     payments,
     prices,
     projects,
+    timeline,
     units,
 )
 from app.bot.webhook import (
@@ -75,6 +76,7 @@ app.include_router(units.router)
 app.include_router(prices.router)
 app.include_router(entries.router)
 app.include_router(payments.router)
+app.include_router(timeline.router)
 app.include_router(notes.router)
 
 # BOT_USE_WEBHOOK=true bo'lsa POST /tg/{secret} route'ini qo'shadi

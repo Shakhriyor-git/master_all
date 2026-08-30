@@ -1,18 +1,21 @@
-"""Obyektlar — yaratish, ro'yxat, karta, yopish, katalogdan nusxa."""
+"""Obyektlar — yaratish, ro'yxat, o'qish uchun karta.
+
+Tahrirlash / status / o'chirish — Mini App'da.
+"""
 
 from aiogram import F, Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot import keyboards as kb
 from app.bot import repo, texts
-from app.bot.keyboards import ImportCb, PageCb, ProjectCb
+from app.bot.keyboards import PageCb, ProjectCb
 from app.bot.states import NewProject
 from app.bot.utils import paginate
 from app.bot.views import send_project_card
 from app.models import Project, User
-from app.models.enums import ProjectStatus
 
 router = Router(name="projects")
 
@@ -41,7 +44,11 @@ async def new_project_title(message: Message, state: FSMContext) -> None:
 async def new_project_client(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    client = None if message.text == texts.BTN_SKIP else message.text.strip()[:200]
+    client = (
+        None
+        if message.text == texts.BTN_SKIP
+        else message.text.strip()[:200]
+    )
     data = await state.get_data()
     await state.clear()
 
@@ -53,41 +60,11 @@ async def new_project_client(
     await session.refresh(project)
 
     await message.answer(texts.PROJECT_CREATED, reply_markup=kb.main_menu())
-
-    if await repo.catalog_items(session, user.id):
-        await message.answer(
-            texts.IMPORT_OFFER, reply_markup=kb.import_offer_kb(project.id)
-        )
-    else:
-        await send_project_card(message, session, project)
-
-
-@router.callback_query(ImportCb.filter())
-async def import_choice(
-    callback: CallbackQuery,
-    callback_data: ImportCb,
-    session: AsyncSession,
-    user: User,
-) -> None:
-    project = await repo.get_owned_project(
-        session, user.id, callback_data.project_id
-    )
-    if project is None:
-        await callback.answer(texts.ERROR, show_alert=True)
-        return
-
-    if callback_data.yes:
-        n = await repo.copy_catalog_to_project(session, user.id, project.id)
-        await callback.message.edit_text(texts.IMPORT_DONE.format(n=n))
-    else:
-        await callback.message.edit_text(texts.IMPORT_SKIPPED)
-
-    await send_project_card(callback, session, project)
-    await callback.answer()
+    await send_project_card(message, session, project)
 
 
 # --------------------------------------------------------------------------
-# Obyektlar ro'yxati va karta
+# Obyektlar ro'yxati va karta (o'qish uchun)
 # --------------------------------------------------------------------------
 async def _show_list(
     target: Message | CallbackQuery,
@@ -111,6 +88,7 @@ async def _show_list(
         await target.answer(text, reply_markup=markup)
 
 
+@router.message(Command("obyektlar"))
 @router.message(F.text == texts.BTN_MY_PROJECTS)
 async def my_projects(
     message: Message, session: AsyncSession, user: User
@@ -150,46 +128,3 @@ async def back_to_list(
     callback: CallbackQuery, session: AsyncSession, user: User
 ) -> None:
     await _show_list(callback, session, user, 1)
-
-
-@router.callback_query(ProjectCb.filter(F.action == "undo"))
-async def undo_last(
-    callback: CallbackQuery,
-    callback_data: ProjectCb,
-    session: AsyncSession,
-    user: User,
-) -> None:
-    project = await repo.get_owned_project(
-        session, user.id, callback_data.project_id
-    )
-    if project is None:
-        await callback.answer(texts.ERROR, show_alert=True)
-        return
-    status_, entry = await repo.undo_last_entry(session, project.id)
-    if status_ == "none":
-        await callback.answer(texts.UNDO_NONE, show_alert=True)
-        return
-    if status_ == "old":
-        await callback.answer(texts.UNDO_OLD, show_alert=True)
-        return
-    await callback.answer(texts.UNDO_OK.format(name=entry.name), show_alert=True)
-    await send_project_card(callback, session, project, edit=True)
-
-
-@router.callback_query(ProjectCb.filter(F.action == "close"))
-async def close_project(
-    callback: CallbackQuery,
-    callback_data: ProjectCb,
-    session: AsyncSession,
-    user: User,
-) -> None:
-    project = await repo.get_owned_project(
-        session, user.id, callback_data.project_id
-    )
-    if project is None:
-        await callback.answer(texts.ERROR, show_alert=True)
-        return
-    project.status = ProjectStatus.COMPLETED
-    await session.commit()
-    await callback.answer(texts.PROJECT_CLOSED, show_alert=True)
-    await send_project_card(callback, session, project, edit=True)

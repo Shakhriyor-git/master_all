@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Reorder } from 'framer-motion'
@@ -210,14 +210,25 @@ function ChipBtn({
 // ---------------------------------------------------------------------------
 function NoteDetail({ id, onBack }: { id: number; onBack: () => void }) {
   const q = useNote(id)
-  const { update, remove, addItem, updateItem, removeItem } =
-    useNoteMutations(id)
+  const { update, remove, addItem, updateItem, removeItem } = useNoteMutations()
   const { projects } = useActiveProject()
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [items, setItems] = useState<NoteItem[]>([])
   const [newItem, setNewItem] = useState('')
+
+  // Ro'yxat elementlari to'g'ridan-to'g'ri keshdan — mutatsiyalar optimistik,
+  // shuning uchun belgilash/qo'shish/o'chirish darhol ko'rinadi.
+  const serverItems = useMemo(
+    () =>
+      [...(q.data?.items ?? [])].sort((a, b) => a.sort_order - b.sort_order),
+    [q.data],
+  )
+  const [items, setItems] = useState<NoteItem[]>(serverItems)
+  const dragging = useRef(false)
+  useEffect(() => {
+    if (!dragging.current) setItems(serverItems)
+  }, [serverItems])
 
   const savedTitle = useRef('')
   const savedBody = useRef('')
@@ -228,20 +239,17 @@ function NoteDetail({ id, onBack }: { id: number; onBack: () => void }) {
       seededFor.current = q.data.id
       setTitle(q.data.title)
       setBody(q.data.body ?? '')
-      setItems([...q.data.items].sort((a, b) => a.sort_order - b.sort_order))
       savedTitle.current = q.data.title
       savedBody.current = q.data.body ?? ''
     }
   }, [q.data])
 
-  // avtomatik saqlash — 1 soniya kechikish bilan
+  // avtomatik saqlash — 1 soniya kechikish bilan (optimistik)
   const { mutate: saveNote } = update
   useEffect(() => {
     if (seededFor.current !== id) return
     const t = setTimeout(() => {
-      const patch: { id: number; title?: string; body?: string } = {
-        id,
-      }
+      const patch: { id: number; title?: string; body?: string } = { id }
       if (title.trim() && title !== savedTitle.current)
         patch.title = title.trim()
       if (body !== savedBody.current) patch.body = body
@@ -261,14 +269,17 @@ function NoteDetail({ id, onBack }: { id: number; onBack: () => void }) {
   const linkedProject = projects.find((p) => p.id === note.project_id)
 
   async function persistOrder(next: NoteItem[]) {
-    setItems(next)
-    await Promise.all(
-      next.flatMap((it, idx) =>
-        it.sort_order === idx
-          ? []
-          : [updateItem.mutateAsync({ id, itemId: it.id, sort_order: idx })],
-      ),
-    )
+    try {
+      await Promise.all(
+        next.flatMap((it, idx) =>
+          it.sort_order === idx
+            ? []
+            : [updateItem.mutateAsync({ id, itemId: it.id, sort_order: idx })],
+        ),
+      )
+    } finally {
+      dragging.current = false
+    }
   }
 
   return (
@@ -339,6 +350,9 @@ function NoteDetail({ id, onBack }: { id: number; onBack: () => void }) {
               <Reorder.Item
                 key={it.id}
                 value={it}
+                onDragStart={() => {
+                  dragging.current = true
+                }}
                 onDragEnd={() => void persistOrder(items)}
                 className="flex items-center gap-2 rounded-btn border border-border bg-surface px-2 py-2"
               >
