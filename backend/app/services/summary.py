@@ -1,4 +1,8 @@
-"""Loyiha balansini hisoblash — bitta agregat SQL so'rovda."""
+"""Loyiha balansi — ikkita mustaqil hisob (ish haqi / mijoz budjeti).
+
+Ikkalasi hech qachon qo'shilmaydi. Bitta agregat SQL so'rovda hisoblanadi,
+hamma joyda `deleted_at IS NULL`.
+"""
 
 from decimal import Decimal
 
@@ -6,15 +10,23 @@ from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Entry, Payment
-from app.models.enums import EntryKind, PaidBy
-from app.schemas.common import ProjectSummary
+from app.models.enums import EntryKind, PaidBy, PaymentPurpose
+from app.schemas.common import (
+    BudgetSummary,
+    LaborSummary,
+    ProjectSummary,
+    SummaryMeta,
+)
 
 _CENTS = Decimal("0.01")
 
 
 def _money(value: object) -> Decimal:
-    """Har qanday son(yoki None) ni 2 xonali Decimal ga keltiradi."""
     return (Decimal(value) if value is not None else Decimal(0)).quantize(_CENTS)
+
+
+def _sum_if(condition) -> object:
+    return func.coalesce(func.sum(case((condition, Entry.amount), else_=0)), 0)
 
 
 async def build_project_summary(
@@ -22,45 +34,33 @@ async def build_project_summary(
 ) -> ProjectSummary:
     is_work = Entry.kind == EntryKind.WORK
     is_material = Entry.kind == EntryKind.MATERIAL
+    is_expense = Entry.kind == EntryKind.EXPENSE
+    by_master = Entry.paid_by == PaidBy.MASTER
+    by_client = Entry.paid_by == PaidBy.CLIENT
+    billable = Entry.is_billable.is_(True)
 
-    works_total = func.coalesce(
-        func.sum(case((is_work, Entry.amount), else_=0)), 0
-    )
-    materials_by_master = func.coalesce(
-        func.sum(
-            case(
-                (is_material & (Entry.paid_by == PaidBy.MASTER), Entry.amount),
-                else_=0,
+    def _payments_sum(purpose: str):
+        return (
+            select(func.coalesce(func.sum(Payment.amount), 0))
+            .where(
+                Payment.project_id == project_id,
+                Payment.purpose == purpose,
+                Payment.deleted_at.is_(None),
             )
-        ),
-        0,
-    )
-    materials_by_client = func.coalesce(
-        func.sum(
-            case(
-                (is_material & (Entry.paid_by == PaidBy.CLIENT), Entry.amount),
-                else_=0,
-            )
-        ),
-        0,
-    )
-
-    # To'lovlar boshqa jadvalda — skalyar kichik so'rov sifatida qo'shamiz,
-    # shunda hammasi bitta so'rovda hisoblanadi.
-    paid_total_sq = (
-        select(func.coalesce(func.sum(Payment.amount), 0))
-        .where(
-            Payment.project_id == project_id,
-            Payment.deleted_at.is_(None),
+            .scalar_subquery()
         )
-        .scalar_subquery()
-    )
 
     stmt = select(
-        works_total.label("works_total"),
-        materials_by_master.label("materials_by_master"),
-        materials_by_client.label("materials_by_client"),
-        paid_total_sq.label("paid_total"),
+        _sum_if(is_work & billable).label("works_total"),
+        _sum_if(is_work & Entry.is_rework.is_(True)).label("rework_total"),
+        _sum_if(is_material & by_master & billable).label(
+            "materials_by_master"
+        ),
+        _sum_if(is_expense & by_master).label("expenses_by_master"),
+        _sum_if(is_material & by_client).label("spent_materials"),
+        _sum_if(is_expense & by_client).label("spent_expenses"),
+        _payments_sum(PaymentPurpose.LABOR).label("paid_labor"),
+        _payments_sum(PaymentPurpose.BUDGET).label("given"),
         func.count(Entry.id).label("entries_count"),
         func.max(Entry.entry_date).label("last_entry_date"),
     ).where(
@@ -70,17 +70,34 @@ async def build_project_summary(
 
     row = (await db.execute(stmt)).one()
 
-    works = _money(row.works_total)
-    mat_master = _money(row.materials_by_master)
-    paid = _money(row.paid_total)
+    works_total = _money(row.works_total)
+    materials_by_master = _money(row.materials_by_master)
+    paid_labor = _money(row.paid_labor)
 
-    return ProjectSummary(
-        works_total=works,
-        materials_by_master=mat_master,
-        materials_by_client=_money(row.materials_by_client),
-        paid_total=paid,
-        # materials_by_client balansga kirmaydi — mijoz o'zi to'lagan
-        client_owes=(works + mat_master - paid).quantize(_CENTS),
+    given = _money(row.given)
+    spent_materials = _money(row.spent_materials)
+    spent_expenses = _money(row.spent_expenses)
+
+    labor = LaborSummary(
+        works_total=works_total,
+        materials_by_master=materials_by_master,
+        paid_labor=paid_labor,
+        # manfiy bo'lishi mumkin (avans) — xizmat raqamni o'zgartirmaydi
+        client_owes=(works_total + materials_by_master - paid_labor).quantize(
+            _CENTS
+        ),
+        rework_total=_money(row.rework_total),
+        expenses_by_master=_money(row.expenses_by_master),
+    )
+    budget = BudgetSummary(
+        given=given,
+        spent_materials=spent_materials,
+        spent_expenses=spent_expenses,
+        spent_total=(spent_materials + spent_expenses).quantize(_CENTS),
+        balance=(given - spent_materials - spent_expenses).quantize(_CENTS),
+    )
+    meta = SummaryMeta(
         entries_count=row.entries_count or 0,
         last_entry_date=row.last_entry_date,
     )
+    return ProjectSummary(labor=labor, budget=budget, meta=meta)

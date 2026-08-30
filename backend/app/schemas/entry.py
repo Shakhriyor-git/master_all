@@ -5,7 +5,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import EntryKind, EntrySource, PaidBy, Unit
+from app.models.enums import EntryKind, EntrySource, PaidBy
+
+# unit — units jadvalidagi code (enum emas; usta o'z birligini qo'sha oladi)
 
 
 class EntryCreate(BaseModel):
@@ -17,7 +19,7 @@ class EntryCreate(BaseModel):
     project_price_id: int | None = None
     kind: EntryKind | None = None
     name: str | None = Field(default=None, min_length=1, max_length=200)
-    unit: Unit | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=20)
     unit_price: Decimal | None = Field(default=None, ge=0)
     quantity: Decimal = Field(gt=0)
     paid_by: PaidBy = PaidBy.MASTER
@@ -30,7 +32,7 @@ class EntryCreate(BaseModel):
 class EntryUpdate(BaseModel):
     kind: EntryKind | None = None
     name: str | None = Field(default=None, min_length=1, max_length=200)
-    unit: Unit | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=20)
     quantity: Decimal | None = Field(default=None, gt=0)
     unit_price: Decimal | None = Field(default=None, ge=0)
     paid_by: PaidBy | None = None

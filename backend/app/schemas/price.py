@@ -5,21 +5,25 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import EntryKind, Unit
+from app.models.enums import EntryKind
+
+# unit — units jadvalidagi code (enum emas; usta o'z birligini qo'sha oladi)
 
 
 class PriceItemCreate(BaseModel):
+    category_id: int | None = None
     name: str = Field(min_length=1, max_length=200)
     kind: EntryKind
-    unit: Unit
+    unit: str = Field(min_length=1, max_length=20)
     default_price: Decimal = Field(default=Decimal("0"), ge=0)
     is_active: bool = True
 
 
 class PriceItemUpdate(BaseModel):
+    category_id: int | None = None
     name: str | None = Field(default=None, min_length=1, max_length=200)
     kind: EntryKind | None = None
-    unit: Unit | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=20)
     default_price: Decimal | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
@@ -44,14 +48,14 @@ class ProjectPriceCreate(BaseModel):
     price_item_id: int | None = None
     name: str | None = Field(default=None, min_length=1, max_length=200)
     kind: EntryKind | None = None
-    unit: Unit | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=20)
     price: Decimal | None = Field(default=None, ge=0)
 
 
 class ProjectPriceUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     kind: EntryKind | None = None
-    unit: Unit | None = None
+    unit: str | None = Field(default=None, min_length=1, max_length=20)
     price: Decimal | None = Field(default=None, ge=0)
     is_active: bool | None = None
 

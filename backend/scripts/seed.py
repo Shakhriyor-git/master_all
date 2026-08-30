@@ -30,21 +30,20 @@ from app.models.enums import (  # noqa: E402
     PaidBy,
     PaymentMethod,
     ProjectStatus,
-    Unit,
 )
 
 # Test usta — Telegram ID int32 dan katta, konfliktdan xoli
 TEST_TELEGRAM_ID = 999_000_001
 TEST_PROJECT_TITLE = "Chilonzor 12-uy, 45-xonadon"
 
-# (nom, tur, birlik, narx)
-CATALOG: list[tuple[str, EntryKind, Unit, Decimal]] = [
-    ("Shpatlyovka", EntryKind.WORK, Unit.M2, Decimal("25000")),
-    ("Plitka yotqizish", EntryKind.WORK, Unit.M2, Decimal("60000")),
-    ("Bo'yash", EntryKind.WORK, Unit.M2, Decimal("18000")),
-    ("Sement", EntryKind.MATERIAL, Unit.QOP, Decimal("45000")),
-    ("Gips", EntryKind.MATERIAL, Unit.QOP, Decimal("38000")),
-    ("Quyma pol", EntryKind.WORK, Unit.M2, Decimal("55000")),
+# (nom, tur, birlik kodi, narx)
+CATALOG: list[tuple[str, EntryKind, str, Decimal]] = [
+    ("Shpatlyovka", EntryKind.WORK, "m2", Decimal("25000")),
+    ("Plitka yotqizish", EntryKind.WORK, "m2", Decimal("60000")),
+    ("Bo'yash", EntryKind.WORK, "m2", Decimal("18000")),
+    ("Sement", EntryKind.MATERIAL, "qop", Decimal("45000")),
+    ("Gips", EntryKind.MATERIAL, "qop", Decimal("38000")),
+    ("Quyma pol", EntryKind.WORK, "m2", Decimal("55000")),
 ]
 
 # Loyihaga nusxalanadigan pozitsiyalar

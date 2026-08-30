@@ -13,8 +13,8 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Numeric,
-    Text,
     String,
+    Text,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -33,6 +33,12 @@ class Payment(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "payments"
     __table_args__ = (
         Index("ix_payments_project_id_paid_at", "project_id", "paid_at"),
+        Index(
+            "ix_payments_project_id_purpose_paid_at",
+            "project_id",
+            "purpose",
+            "paid_at",
+        ),
         CheckConstraint("amount > 0", name="ck_payments_amount_positive"),
     )
 
@@ -51,6 +57,10 @@ class Payment(TimestampMixin, SoftDeleteMixin, Base):
     # cash / card / transfer
     method: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="cash"
+    )
+    # labor — qarzni kamaytiradi; budget — mijoz budjetini to'ldiradi
+    purpose: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="labor", server_default="labor"
     )
     paid_at: Mapped[datetime.date] = mapped_column(
         Date, nullable=False, server_default=func.current_date()

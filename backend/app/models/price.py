@@ -21,6 +21,7 @@ from app.core.db import Base
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.category import Category
     from app.models.entry import Entry
     from app.models.project import Project
     from app.models.user import User
@@ -43,10 +44,16 @@ class PriceItem(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
+    # kategoriya o'chirilsa NULL bo'ladi — pozitsiya "Kategoriyasiz" ga tushadi
+    category_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("categories.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     # work / material
     kind: Mapped[str] = mapped_column(String(20), nullable=False)
-    # m2, m3, dona, qop, metr, kg, soat, komplekt
+    # units.code ni saqlaydi (FK yo'q — birlik o'chsa ham buzilmasin)
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     default_price: Mapped[Decimal] = mapped_column(
         Numeric(14, 2), nullable=False, server_default=text("0")
@@ -57,6 +64,9 @@ class PriceItem(TimestampMixin, Base):
 
     user: Mapped[User] = relationship(
         "User", back_populates="price_items", lazy="raise"
+    )
+    category: Mapped[Category | None] = relationship(
+        "Category", back_populates="price_items", lazy="raise"
     )
     project_prices: Mapped[list[ProjectPrice]] = relationship(
         "ProjectPrice", back_populates="price_item", lazy="raise"

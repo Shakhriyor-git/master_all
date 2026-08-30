@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.security import InvalidInitDataError, validate_init_data
 from app.models import Project, User
+from app.services.user_service import get_or_create_user
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -53,20 +54,13 @@ async def get_current_user(
             detail="initData ichida foydalanuvchi ID topilmadi",
         )
 
-    user = (
-        await db.execute(select(User).where(User.telegram_id == telegram_id))
-    ).scalar_one_or_none()
-    if user is None:
-        user = User(
-            telegram_id=telegram_id,
-            full_name=_full_name(tg_user)[:200],
-            username=(tg_user.get("username") or None),
-            language=(tg_user.get("language_code") or "uz")[:8],
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    return user
+    return await get_or_create_user(
+        db,
+        telegram_id=telegram_id,
+        full_name=_full_name(tg_user),
+        username=tg_user.get("username"),
+        language=tg_user.get("language_code") or "uz",
+    )
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

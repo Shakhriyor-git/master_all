@@ -11,7 +11,7 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from app.bot import texts
-from app.models.enums import Unit
+from app.services.catalog_seed import HIDDEN_PICKER_UNITS, SYSTEM_UNITS
 
 
 # --------------------------------------------------------------------------
@@ -169,9 +169,12 @@ def price_pick_kb(
 
 
 def unit_kb() -> InlineKeyboardMarkup:
+    # B8: bu ro'yxat ustaning `units` jadvalidan olinadi. Hozircha standart.
     kb = InlineKeyboardBuilder()
-    for u in Unit:
-        kb.button(text=u.value, callback_data=UnitCb(value=u.value))
+    for code, label in SYSTEM_UNITS:
+        if code in HIDDEN_PICKER_UNITS:
+            continue
+        kb.button(text=label, callback_data=UnitCb(value=code))
     kb.adjust(4)
     return kb.as_markup()
 

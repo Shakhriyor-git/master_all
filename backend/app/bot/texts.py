@@ -83,28 +83,50 @@ ASK_PI_PRICE = "Bir birlik narxi (so'm)?"
 # --- Obyekt yopish ---
 PROJECT_CLOSED = "Obyekt yopildi (bajarilgan)."
 
-KIND_UZ = {"work": "ish", "material": "material"}
+KIND_UZ = {"work": "ish", "material": "material", "expense": "xarajat"}
 
 
 def esc(value: object) -> str:
     return html.escape(str(value)) if value is not None else ""
 
 
+def render_owes_line(client_owes: Decimal) -> str:
+    """Manfiy qarz hech qachon ko'rsatilmaydi."""
+    if client_owes > 0:
+        return f"Mijoz qarzi:   {fmt_money(client_owes)}"
+    if client_owes < 0:
+        return (
+            f"Mijoz avansi:  {fmt_money(-client_owes)}\n"
+            f"<i>kelgusi ishlardan yechiladi</i>"
+        )
+    return "Hisob-kitob teng"
+
+
 def render_project_card(project, summary) -> str:
-    """Obyekt kartasi — summary xizmati natijasi bilan."""
-    materials_total = (
-        summary.materials_by_master + summary.materials_by_client
-    )
+    """Obyekt kartasi — ikkita blok: ish haqi hisobi + mijoz budjeti."""
+    labor = summary.labor
+    budget = summary.budget
     client = esc(project.client_name) if project.client_name else "—"
-    return (
-        f"🏠 <b>{esc(project.title)}</b>\n"
-        f"Mijoz: {client}\n\n"
-        f"Ishlar:      {fmt_money(summary.works_total)}\n"
-        f"Material:    {fmt_money(materials_total)}\n"
-        f"To'langan:   {fmt_money(summary.paid_total)}\n"
-        f"─────────────────────\n"
-        f"Qarz:        {fmt_money(summary.client_owes)}"
-    )
+    lines = [
+        f"🏠 <b>{esc(project.title)}</b>",
+        f"Mijoz: {client}",
+        "",
+        "<b>Ish haqi hisobi</b>",
+        f"Ishlar:        {fmt_money(labor.works_total)}",
+        f"Material:      {fmt_money(labor.materials_by_master)}",
+        f"To'langan:     {fmt_money(labor.paid_labor)}",
+        "─────────────────────",
+        render_owes_line(labor.client_owes),
+    ]
+    if budget.given > 0:
+        lines += [
+            "",
+            "<b>Mijoz budjeti</b>",
+            f"Berilgan:      {fmt_money(budget.given)}",
+            f"Sarflangan:    {fmt_money(budget.spent_total)}",
+            f"Qoldiq:        {fmt_money(budget.balance)}",
+        ]
+    return "\n".join(lines)
 
 
 def render_confirm_entry(name: str, qty: Decimal, unit: str, price: Decimal) -> str:
@@ -116,23 +138,47 @@ def render_confirm_entry(name: str, qty: Decimal, unit: str, price: Decimal) -> 
 
 
 def render_report(project, summary, recent: Iterable) -> str:
+    labor = summary.labor
+    budget = summary.budget
+    meta = summary.meta
     lines = [
         f"📊 <b>{esc(project.title)}</b> — hisobot\n",
-        f"Ishlar:             {fmt_money(summary.works_total)}",
-        f"Material (meniki):   {fmt_money(summary.materials_by_master)}",
-        f"Material (mijoz):    {fmt_money(summary.materials_by_client)}",
-        f"To'langan:           {fmt_money(summary.paid_total)}",
+        "<b>1. Ish haqi hisobi</b>",
+        f"Ishlar:              {fmt_money(labor.works_total)}",
+        f"Material (usta):      {fmt_money(labor.materials_by_master)}",
+        f"To'langan (ish haqi): {fmt_money(labor.paid_labor)}",
         "─────────────────────",
-        f"Mijoz qarzi:         {fmt_money(summary.client_owes)}\n",
-        f"Yozuvlar: {summary.entries_count} ta",
-        f"Oxirgi yozuv: {fmt_date(summary.last_entry_date)}",
+        render_owes_line(labor.client_owes),
+    ]
+    if labor.rework_total > 0:
+        lines.append(
+            f"⚠️ Brak: {fmt_money(labor.rework_total)} — mijozga yozilmadi"
+        )
+    if labor.expenses_by_master > 0:
+        lines.append(
+            f"Usta xarajati: {fmt_money(labor.expenses_by_master)} "
+            "— mijozga yozilmadi"
+        )
+    lines += [
+        "",
+        "<b>2. Mijoz budjeti</b>",
+        f"Berilgan:            {fmt_money(budget.given)}",
+        f"Material (mijoz):     {fmt_money(budget.spent_materials)}",
+        f"Xarajat (mijoz):      {fmt_money(budget.spent_expenses)}",
+        "─────────────────────",
+        f"Qoldiq:              {fmt_money(budget.balance)}",
+        "",
+        f"Yozuvlar: {meta.entries_count} ta",
+        f"Oxirgi yozuv: {fmt_date(meta.last_entry_date)}",
     ]
     recent = list(recent)
     if recent:
         lines.append("\n<b>Oxirgi yozuvlar:</b>")
         for e in recent:
+            mark = " ⚠️" if getattr(e, "is_rework", False) else ""
             lines.append(
                 f"• {fmt_date(e.entry_date)} — {esc(e.name)} "
-                f"{fmt_qty(e.quantity)} {fmt_unit(e.unit)} = {fmt_money(e.amount)}"
+                f"{fmt_qty(e.quantity)} {fmt_unit(e.unit)} = "
+                f"{fmt_money(e.amount)}{mark}"
             )
     return "\n".join(lines)

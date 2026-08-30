@@ -5,11 +5,10 @@ from typing import Any
 
 from aiogram import BaseMiddleware, Dispatcher
 from aiogram.types import TelegramObject, User as TgUser
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import SessionLocal
-from app.models import User
+from app.services.user_service import get_or_create_user
 
 
 class DbSessionMiddleware(BaseMiddleware):
@@ -41,27 +40,14 @@ class UserMiddleware(BaseMiddleware):
         tg_user: TgUser | None = data.get("event_from_user")
         session: AsyncSession | None = data.get("session")
         if tg_user is not None and session is not None and not tg_user.is_bot:
-            data["user"] = await _get_or_create_user(session, tg_user)
+            data["user"] = await get_or_create_user(
+                session,
+                telegram_id=tg_user.id,
+                full_name=tg_user.full_name or "",
+                username=tg_user.username,
+                language=tg_user.language_code or "uz",
+            )
         return await handler(event, data)
-
-
-async def _get_or_create_user(session: AsyncSession, tg_user: TgUser) -> User:
-    user = (
-        await session.execute(
-            select(User).where(User.telegram_id == tg_user.id)
-        )
-    ).scalar_one_or_none()
-    if user is None:
-        user = User(
-            telegram_id=tg_user.id,
-            full_name=(tg_user.full_name or f"user_{tg_user.id}")[:200],
-            username=tg_user.username or None,
-            language=(tg_user.language_code or "uz")[:8],
-        )
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-    return user
 
 
 def setup_middlewares(dp: Dispatcher) -> None:
