@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import (
+    ai,
     categories,
     entries,
     health,
@@ -78,6 +79,7 @@ app.include_router(entries.router)
 app.include_router(payments.router)
 app.include_router(timeline.router)
 app.include_router(notes.router)
+app.include_router(ai.router)
 
 # BOT_USE_WEBHOOK=true bo'lsa POST /tg/{secret} route'ini qo'shadi
 attach_bot_webhook(app)

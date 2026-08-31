@@ -15,9 +15,11 @@ import {
   uploadAvatar,
   type Me,
   type MePatch,
+  type SocialLink,
 } from '../api/me'
 import { BottomSheet } from '../components/BottomSheet'
 import { Screen } from '../components/Screen'
+import { SocialLinks } from '../components/SocialLinks'
 import { SplashSkeleton } from '../components/states'
 import { useMe } from '../hooks/useMe'
 import { getTelegramPhotoUrl, hapticSuccess } from '../lib/telegram'
@@ -41,17 +43,11 @@ export function Profile() {
   })
   const upload = useMutation({
     mutationFn: (file: File) => uploadAvatar(file),
-    onSuccess: (data: Me) => {
-      qc.setQueryData(['me'], data)
-      hapticSuccess()
-    },
+    onSuccess: (data: Me) => qc.setQueryData(['me'], data),
   })
   const removeAvatar = useMutation({
     mutationFn: () => deleteAvatar(),
-    onSuccess: (data: Me) => {
-      qc.setQueryData(['me'], data)
-      hapticSuccess()
-    },
+    onSuccess: (data: Me) => qc.setQueryData(['me'], data),
   })
 
   if (isPending || !me) return <SplashSkeleton />
@@ -61,46 +57,64 @@ export function Profile() {
 
   return (
     <Screen title="Profil">
-      <div className="flex items-center gap-3 rounded-card border border-border bg-surface p-4">
+      {/* Gradient sarlavha */}
+      <div
+        style={{ background: 'var(--grad)' }}
+        className="flex flex-col items-center rounded-card px-4 pb-5 pt-6 text-on-primary"
+      >
         <button
           type="button"
           onClick={() => setAvatarOpen(true)}
-          className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-title text-primary active:scale-95"
+          className="rounded-full bg-white/20 p-1 active:scale-95"
         >
-          {avatarSrc ? (
-            <img
-              src={avatarSrc}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            (me.full_name || '?').slice(0, 1).toUpperCase()
-          )}
+          <span className="flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full bg-primary-soft text-title text-primary">
+            {avatarSrc ? (
+              <img
+                src={avatarSrc}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              (me.full_name || '?').slice(0, 1).toUpperCase()
+            )}
+          </span>
         </button>
+        <div className="mt-2 text-title">{me.full_name}</div>
+        <div className="text-label opacity-90">
+          {me.phone ?? 'telefon kiritilmagan'}
+        </div>
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="min-w-0 flex-1 text-left"
+          className="mt-1 rounded-chip bg-white/15 px-3 py-0.5 text-label active:scale-95"
         >
-          <div className="truncate text-body text-text">{me.full_name}</div>
-          <div className="text-label text-text-muted">
-            {me.phone ?? 'telefon kiritilmagan'}
-          </div>
-          <div className="mt-0.5 text-label text-primary">Tahrirlash</div>
+          Tahrirlash
         </button>
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <Metric label="Faol obyektlar" value={me.active_projects} />
-        <Metric label="Tugatilgan" value={me.completed_projects} />
+        <Metric label="Faol" value={me.active_projects} />
+        <Metric label="Tugadi" value={me.completed_projects} />
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-card border border-border bg-surface">
-        <LinkRow to="/catalog" icon={<IconTool size={18} />} label="Xizmatlarim" />
-        <LinkRow to="/notes" icon={<IconNote size={18} />} label="Qaydlarim" />
+      <h2 className="mb-1.5 mt-5 text-label uppercase text-text-muted">
+        Mening sahifalarim
+      </h2>
+      <div className="overflow-hidden rounded-card border border-border bg-surface">
+        <SocialLinks
+          links={me.social_links}
+          onChange={(next: SocialLink[]) =>
+            saveMe.mutateAsync({ social_links: next })
+          }
+        />
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-card border border-border bg-surface">
+        <LinkRow to="/catalog" icon={<IconTool size={20} />} label="Xizmatlarim" />
+        <LinkRow to="/notes" icon={<IconNote size={20} />} label="Qaydlarim" />
         <div className="flex items-center gap-3 px-4 py-3 opacity-60">
           <span className="text-text-muted">
-            <IconUsersGroup size={18} />
+            <IconUsersGroup size={20} />
           </span>
           <span className="flex-1 text-body text-text">Brigada</span>
           <span className="rounded-chip bg-surface-2 px-2 py-0.5 text-label text-text-muted">
@@ -164,7 +178,7 @@ export function Profile() {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="rounded-card border border-border bg-surface p-4 text-center">
       <div className="text-title text-text">{value}</div>
       <div className="text-label text-text-muted">{label}</div>
     </div>

@@ -4,6 +4,7 @@ import type { Entry } from '../api/entries'
 import { EntryCard } from '../components/EntryCard'
 import { EntryDetailSheet } from '../components/EntryDetailSheet'
 import { BottomSheet } from '../components/BottomSheet'
+import { CountUp } from '../components/CountUp'
 import { MoneyInput } from '../components/MoneyInput'
 import { EmptyState, Screen } from '../components/Screen'
 import { SplashSkeleton } from '../components/states'
@@ -68,13 +69,12 @@ export function Budget() {
         </div>
         <div className="mt-3 border-t border-border pt-3">
           <div className="text-label text-text-muted">Qoldiq</div>
-          <div
-            className={`text-title ${
+          <CountUp
+            value={balance}
+            className={`block text-title ${
               balance < 0 ? 'text-danger' : 'text-text'
             }`}
-          >
-            {fmtMoney(balance)}
-          </div>
+          />
         </div>
       </div>
 

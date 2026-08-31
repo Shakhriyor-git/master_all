@@ -4,17 +4,21 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   IconPackage,
+  IconPencil,
   IconPlus,
   IconReceipt,
   IconTool,
 } from '@tabler/icons-react'
+import type { AiDraft } from '../api/ai'
 import {
   listCategories,
   listPriceItems,
   type PriceItem,
 } from '../api/catalog'
 import type { CreateEntryBody, EntryKind, PayMethod } from '../api/entries'
+import { AiInputBar } from '../components/AiInputBar'
 import { Chips } from '../components/Chips'
+import { EntryFormSheet } from '../components/EntryFormSheet'
 import { MoneyInput } from '../components/MoneyInput'
 import { NewServiceSheet } from '../components/NewServiceSheet'
 import { QuantityInput } from '../components/QuantityInput'
@@ -42,6 +46,8 @@ export function Add() {
       ? initialType
       : null,
   )
+  const [draft, setDraft] = useState<AiDraft | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
 
   if (!active) {
     return (
@@ -54,6 +60,24 @@ export function Add() {
   if (!type) {
     return (
       <Screen title="Qo‘shish">
+        <AiInputBar
+          projectId={active.id}
+          onDraft={(d) => {
+            setDraft(d)
+            setFormOpen(true)
+          }}
+          onManual={() => {
+            setDraft(null)
+            setFormOpen(true)
+          }}
+        />
+
+        <div className="my-3 flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-label text-text-faint">yoki</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
         <div className="space-y-3">
           <TypeButton
             icon={<IconTool size={22} />}
@@ -71,6 +95,17 @@ export function Add() {
             onClick={() => setType('expense')}
           />
         </div>
+
+        <EntryFormSheet
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
+          projectId={active.id}
+          draft={draft}
+          initialKind={draft?.kind ?? 'material'}
+          onSaved={() =>
+            navigate(`/history?kind=${draft?.kind ?? 'material'}`)
+          }
+        />
       </Screen>
     )
   }
@@ -136,6 +171,7 @@ function ServiceFlow({
   const [paidBy, setPaidBy] = useState<'master' | 'client'>('master')
   const [method, setMethod] = useState<PayMethod>('cash')
   const [newOpen, setNewOpen] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
 
   const categories = cats.data ?? []
   const showCategoryStep = categories.length > 1
@@ -248,6 +284,13 @@ function ServiceFlow({
                 : 'Xizmatni qidiring…'
             }
           />
+          <button
+            type="button"
+            onClick={() => setManualOpen(true)}
+            className="mt-2 flex w-full items-center gap-1.5 rounded-btn border border-dashed border-border px-3 py-2.5 text-label text-primary active:bg-surface-2"
+          >
+            <IconPencil size={15} /> Qo‘lda kiritish
+          </button>
           <div className="mt-2 max-h-64 overflow-y-auto rounded-card border border-border bg-surface">
             {(items.data ?? []).map((it) => (
               <button
@@ -363,6 +406,14 @@ function ServiceFlow({
           setItem(it)
           setPriceOverride(null)
         }}
+      />
+
+      <EntryFormSheet
+        open={manualOpen}
+        onClose={() => setManualOpen(false)}
+        projectId={projectId}
+        initialKind={kind}
+        onSaved={onDone}
       />
     </Screen>
   )

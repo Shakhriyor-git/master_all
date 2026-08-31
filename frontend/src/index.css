@@ -21,6 +21,8 @@
   --danger: #c0392b;
   --danger-soft: #fbe0dc;
   --border: #e2e6ec;
+  /* Gradient — FAQAT asosiy obyekt kartasi va profil sarlavhasida */
+  --grad: linear-gradient(135deg, #2563eb, #4f8af5);
 }
 
 :root[data-theme='dark'] {
@@ -40,6 +42,16 @@
   --danger: #e5564a;
   --danger-soft: #3a1d1a;
   --border: #2a2a38;
+  --grad: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 html,

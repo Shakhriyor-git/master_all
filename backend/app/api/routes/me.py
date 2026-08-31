@@ -52,7 +52,9 @@ async def _me_read(db: DbSession, user: User) -> MeRead:
         phone=user.phone,
         language=user.language,
         theme=user.theme,
+        onboarded=user.onboarded,
         avatar_url=_avatar_url(user),
+        social_links=user.social_links or [],
         active_projects=active,
         completed_projects=completed,
     )
@@ -65,7 +67,13 @@ async def get_me(user: CurrentUser, db: DbSession):
 
 @router.patch("", response_model=MeRead)
 async def update_me(payload: MeUpdate, user: CurrentUser, db: DbSession):
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+    if "social_links" in data:
+        # JSONB — oddiy dict ro'yxati sifatida saqlanadi
+        data["social_links"] = [
+            link.model_dump() for link in (payload.social_links or [])
+        ]
+    for field, value in data.items():
         setattr(user, field, value)
     await db.commit()
     await db.refresh(user)

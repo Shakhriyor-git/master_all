@@ -10,6 +10,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    KeyboardButton,
     ReplyKeyboardMarkup,
     WebAppInfo,
 )
@@ -59,6 +60,17 @@ def skip_cancel_kb() -> ReplyKeyboardMarkup:
     kb.button(text=texts.BTN_CANCEL)
     kb.adjust(2)
     return kb.as_markup(resize_keyboard=True)
+
+
+def contact_kb() -> ReplyKeyboardMarkup:
+    """Telefon so'rash — request_contact tugmasi + 'Keyinroq'."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=texts.BTN_SEND_PHONE, request_contact=True)],
+            [KeyboardButton(text=texts.BTN_LATER)],
+        ],
+        resize_keyboard=True,
+    )
 
 
 # --------------------------------------------------------------------------

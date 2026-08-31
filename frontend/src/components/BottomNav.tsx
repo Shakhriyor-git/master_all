@@ -1,18 +1,40 @@
 import {
   IconHistory,
-  IconHome2,
+  IconHistoryToggle,
+  IconHome,
+  IconHomeFilled,
   IconPlus,
   IconSettings,
+  IconSettingsFilled,
   IconUser,
+  IconUserFilled,
+  type Icon,
 } from '@tabler/icons-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { hapticSuccess } from '../lib/telegram'
 
-const TABS = [
-  { to: '/', label: 'Asosiy', Icon: IconHome2 },
-  { to: '/history', label: 'Tarix', Icon: IconHistory },
-  { to: '/profile', label: 'Profil', Icon: IconUser },
-  { to: '/settings', label: 'Sozlamalar', Icon: IconSettings },
+interface TabDef {
+  to: string
+  label: string
+  Icon: Icon
+  IconActive: Icon
+}
+
+const TABS: TabDef[] = [
+  { to: '/', label: 'Asosiy', Icon: IconHome, IconActive: IconHomeFilled },
+  {
+    to: '/history',
+    label: 'Tarix',
+    Icon: IconHistoryToggle,
+    IconActive: IconHistory,
+  },
+  { to: '/profile', label: 'Profil', Icon: IconUser, IconActive: IconUserFilled },
+  {
+    to: '/settings',
+    label: 'Sozlamalar',
+    Icon: IconSettings,
+    IconActive: IconSettingsFilled,
+  },
 ]
 
 export function BottomNav() {
@@ -33,7 +55,7 @@ export function BottomNav() {
               hapticSuccess()
               navigate('/add')
             }}
-            className="-mt-6 flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary text-on-primary active:scale-95"
+            className="-mt-6 flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary text-on-primary shadow-md active:scale-95"
           >
             <IconPlus size={26} />
           </button>
@@ -47,15 +69,7 @@ export function BottomNav() {
   )
 }
 
-function Tab({
-  to,
-  label,
-  Icon,
-}: {
-  to: string
-  label: string
-  Icon: typeof IconHome2
-}) {
+function Tab({ to, label, Icon, IconActive }: TabDef) {
   return (
     <NavLink
       to={to}
@@ -70,7 +84,7 @@ function Tab({
               : 'flex flex-col items-center gap-0.5 text-text-faint'
           }
         >
-          <Icon size={22} />
+          {isActive ? <IconActive size={24} /> : <Icon size={23} />}
           <span className="text-label">{label}</span>
         </span>
       )}

@@ -6,6 +6,7 @@ import { ActiveProjectProvider } from './hooks/activeProject'
 import { useMe, useUpdateMe } from './hooks/useMe'
 import { Home } from './screens/Home'
 import { History } from './screens/History'
+import { Onboarding } from './screens/Onboarding'
 import { Profile } from './screens/Profile'
 import { Settings } from './screens/Settings'
 import { Add } from './screens/Add'
@@ -20,6 +21,17 @@ export function Root() {
   if (me.isPending) return <SplashSkeleton />
   if (me.isError || !me.data) {
     return <ErrorScreen error={me.error} onRetry={() => void me.refetch()} />
+  }
+
+  if (!me.data.onboarded) {
+    return (
+      <ThemeProvider
+        pref={me.data.theme}
+        onPrefChange={(theme) => updateMe.mutate({ theme })}
+      >
+        <Onboarding me={me.data} />
+      </ThemeProvider>
+    )
   }
 
   return (

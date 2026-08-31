@@ -2,6 +2,11 @@ import { api } from './client'
 
 export type ThemePref = 'light' | 'dark' | 'auto'
 
+export interface SocialLink {
+  label: string
+  url: string
+}
+
 export interface Me {
   id: number
   full_name: string
@@ -9,7 +14,9 @@ export interface Me {
   phone: string | null
   language: string
   theme: ThemePref
+  onboarded: boolean
   avatar_url: string | null
+  social_links: SocialLink[]
   active_projects: number
   completed_projects: number
 }
@@ -19,6 +26,8 @@ export interface MePatch {
   phone?: string
   theme?: ThemePref
   language?: string
+  onboarded?: boolean
+  social_links?: SocialLink[]
 }
 
 export const getMe = () => api<Me>('/api/me')

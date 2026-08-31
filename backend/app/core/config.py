@@ -35,8 +35,10 @@ class Settings(BaseSettings):
     # Media (avatarlar) — named volume; /media/ orqali statik beriladi
     media_root: str = "/data"
 
-    # AI (keyingi bosqichda)
+    # AI — matn va chek o'qish (Gemini)
     gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    ai_daily_limit: int = 50
     groq_api_key: str = ""
 
     @property

@@ -76,6 +76,8 @@ export interface CreateEntryBody {
   is_rework?: boolean
   payment_method?: PayMethod | null
   vendor?: string
+  entry_date?: string
+  note?: string
 }
 
 export const createEntry = (projectId: number, body: CreateEntryBody) =>

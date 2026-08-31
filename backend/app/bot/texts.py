@@ -16,6 +16,15 @@ BTN_NEW_PROJECT = "➕ Yangi obyekt"
 BTN_HELP = "❓ Yordam"
 BTN_CANCEL = "❌ Bekor qilish"
 BTN_SKIP = "⏭ O'tkazib yuborish"
+BTN_SEND_PHONE = "📱 Raqamni yuborish"
+BTN_LATER = "Keyinroq"
+
+# --- Tanishuv ---
+ASK_PHONE = (
+    "Telefon raqamingizni yuboring — hisobotlarda va PDF da ko'rsatiladi.\n\n"
+    "«📱 Raqamni yuborish» tugmasini bosing yoki «Keyinroq»."
+)
+PHONE_SAVED = "Rahmat! Raqam saqlandi."
 
 # --- Umumiy ---
 GREETING = (

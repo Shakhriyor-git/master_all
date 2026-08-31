@@ -112,18 +112,3 @@ export const deleteCategory = (id: number) =>
 
 export const createUnit = (body: { code: string; label: string }) =>
   api<Unit>('/api/units', { method: 'POST', body: JSON.stringify(body) })
-
-// --- Eski standart katalogni tozalash (bir martalik) ---
-
-export interface SeededInfo {
-  price_items: number
-  categories: number
-}
-
-export const getSeededInfo = () =>
-  api<SeededInfo>('/api/price-items/seeded')
-
-export const deleteSeededCatalog = async (): Promise<void> => {
-  await api('/api/price-items/seeded', { method: 'DELETE' })
-  await api('/api/categories/seeded', { method: 'DELETE' })
-}

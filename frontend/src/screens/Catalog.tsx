@@ -1,17 +1,11 @@
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   IconDotsVertical,
   IconPlus,
 } from '@tabler/icons-react'
-import {
-  deleteSeededCatalog,
-  getSeededInfo,
-  type Category,
-  type PriceItem,
-} from '../api/catalog'
+import type { Category, PriceItem } from '../api/catalog'
 import { BottomSheet } from '../components/BottomSheet'
 import { MoneyInput } from '../components/MoneyInput'
 import { NewServiceSheet } from '../components/NewServiceSheet'
@@ -89,8 +83,6 @@ export function Catalog() {
 
   return (
     <Screen title="Xizmatlarim">
-      <SeededBanner />
-
       <div className="mb-3">
         <Segment
           options={[
@@ -148,59 +140,6 @@ export function Catalog() {
 
       <NewCategoryCard kind={kind} />
     </Screen>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Eski standart katalog haqida bir martalik banner
-// ---------------------------------------------------------------------------
-function SeededBanner() {
-  const qc = useQueryClient()
-  const [dismissed, setDismissed] = useState(false)
-  const probe = useQuery({
-    queryKey: ['catalog', 'seeded'],
-    queryFn: getSeededInfo,
-    staleTime: 60_000,
-  })
-  const clear = useMutation({
-    mutationFn: deleteSeededCatalog,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['categories'] })
-      qc.invalidateQueries({ queryKey: ['price-items'] })
-      qc.invalidateQueries({ queryKey: ['catalog', 'seeded'] })
-      hapticSuccess()
-    },
-  })
-
-  const count = probe.data?.price_items ?? 0
-  if (dismissed || count === 0) return null
-
-  return (
-    <div className="mb-3 rounded-card border border-border bg-surface-2 p-3">
-      <p className="text-label text-text">
-        Tayyor katalog endi ishlatilmaydi. Ishlatilmagan {count} ta
-        pozitsiyani o‘chirasizmi?
-      </p>
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          disabled={clear.isPending}
-          onClick={() => {
-            clear.mutate(undefined, { onSettled: () => setDismissed(true) })
-          }}
-          className="min-h-[36px] flex-1 rounded-btn bg-primary text-label text-on-primary active:scale-[0.98] disabled:opacity-60"
-        >
-          O‘chirish
-        </button>
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          className="min-h-[36px] flex-1 rounded-btn bg-surface text-label text-text-muted active:scale-[0.98]"
-        >
-          Qoldirish
-        </button>
-      </div>
-    </div>
   )
 }
 

@@ -10,6 +10,7 @@ import type { Entry, EntryKind } from '../api/entries'
 import { reportPdfUrl } from '../api/report'
 import { AddPaymentSheet } from '../components/AddPaymentSheet'
 import { BottomSheet } from '../components/BottomSheet'
+import { CountUp } from '../components/CountUp'
 import { EmptyState, Screen } from '../components/Screen'
 import { ProjectPicker } from '../components/ProjectPicker'
 import { SplashSkeleton } from '../components/states'
@@ -50,7 +51,8 @@ export function Home() {
       <button
         type="button"
         onClick={() => projects.length > 1 && setPickerOpen(true)}
-        className="w-full rounded-card bg-primary p-4 text-left text-on-primary active:scale-[0.99]"
+        style={{ background: 'var(--grad)' }}
+        className="w-full rounded-card p-4 text-left text-on-primary shadow-sm active:scale-[0.99]"
       >
         <div className="flex items-center gap-1">
           <span className="truncate text-title">{active.title}</span>
@@ -64,11 +66,11 @@ export function Home() {
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div>
             <div className="text-label opacity-80">Jami ish haqi</div>
-            <div className="text-title">{fmtMoney(laborTotal)}</div>
+            <CountUp value={laborTotal} className="text-title" />
           </div>
           <div>
             <div className="text-label opacity-80">Jami xarajat</div>
-            <div className="text-title">{fmtMoney(spendTotal)}</div>
+            <CountUp value={spendTotal} className="text-title" />
           </div>
         </div>
       </button>

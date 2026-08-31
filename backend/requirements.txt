@@ -17,6 +17,7 @@ python-multipart==0.0.20
 httpx==0.28.1
 pillow==11.0.0
 reportlab==4.2.5
+google-genai==1.38.0
 
 # --- Dev ---
 ruff==0.8.4
