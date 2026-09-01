@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
 
@@ -185,10 +186,11 @@ def _parse_json(raw: str) -> dict:
     return data
 
 
-def _generate(contents: list) -> dict:
+def _generate(contents: list, label: str = "call") -> dict:
     client = _get_client()
     from google.genai import types
 
+    started = time.perf_counter()
     try:
         resp = client.models.generate_content(
             model=settings.gemini_model,
@@ -204,6 +206,17 @@ def _generate(contents: list) -> dict:
     except Exception as exc:  # noqa: BLE001 — SDK turli xato turlarini beradi
         log.exception("Gemini chaqiruv xatosi")
         raise AiUnavailable("AI xizmati javob bermadi") from exc
+
+    # Chaqiruv vaqti va tokenlar — sekinlashsa sababini bilish uchun
+    usage = getattr(resp, "usage_metadata", None)
+    log.info(
+        "AI %s: %.1fs | in=%s tok | out=%s tok | model=%s",
+        label,
+        time.perf_counter() - started,
+        getattr(usage, "prompt_token_count", "?"),
+        getattr(usage, "candidates_token_count", "?"),
+        settings.gemini_model,
+    )
     return _parse_json(getattr(resp, "text", "") or "")
 
 
@@ -221,7 +234,7 @@ async def parse_text(
     prompt = _TEXT_PROMPT.format(
         units=units, catalog=catalog or "(bo'sh)", text=text.strip()
     )
-    return await run_in_threadpool(_generate, [prompt])
+    return await run_in_threadpool(_generate, [prompt], "parse")
 
 
 async def scan_receipt(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
@@ -229,7 +242,7 @@ async def scan_receipt(image_bytes: bytes, mime_type: str = "image/jpeg") -> dic
     from google.genai import types
 
     part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    return await run_in_threadpool(_generate, [_RECEIPT_PROMPT, part])
+    return await run_in_threadpool(_generate, [_RECEIPT_PROMPT, part], "receipt")
 
 
 def build_note_text(items: list[dict]) -> str:

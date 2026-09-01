@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 
 from app.api.deps import CurrentUser, DbSession
 from app.core.config import settings
-from app.models import Project, User
+from app.models import Note, PriceItem, Project, User
 from app.models.enums import ProjectStatus
 from app.schemas.me import MeRead, MeUpdate
 
@@ -43,8 +43,42 @@ async def _project_counts(db: DbSession, user_id: int) -> tuple[int, int]:
     )
 
 
+async def _catalog_counts(db: DbSession, user_id: int) -> tuple[int, int]:
+    """(jami pozitsiya, narxsiz) — faqat faol katalog."""
+    row = (
+        await db.execute(
+            select(
+                func.count(PriceItem.id),
+                func.count(PriceItem.id).filter(
+                    PriceItem.default_price <= 0
+                ),
+            ).where(
+                PriceItem.user_id == user_id,
+                PriceItem.is_active.is_(True),
+            )
+        )
+    ).one()
+    return int(row[0] or 0), int(row[1] or 0)
+
+
+async def _notes_count(db: DbSession, user_id: int) -> int:
+    return int(
+        (
+            await db.execute(
+                select(func.count(Note.id)).where(
+                    Note.user_id == user_id,
+                    Note.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+
 async def _me_read(db: DbSession, user: User) -> MeRead:
     active, completed = await _project_counts(db, user.id)
+    catalog_items, catalog_unpriced = await _catalog_counts(db, user.id)
+    notes_count = await _notes_count(db, user.id)
     return MeRead(
         id=user.id,
         full_name=user.full_name,
@@ -57,6 +91,9 @@ async def _me_read(db: DbSession, user: User) -> MeRead:
         social_links=user.social_links or [],
         active_projects=active,
         completed_projects=completed,
+        catalog_items=catalog_items,
+        catalog_unpriced=catalog_unpriced,
+        notes_count=notes_count,
     )
 
 

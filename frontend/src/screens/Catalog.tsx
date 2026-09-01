@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import {
   IconDotsVertical,
   IconPlus,
+  IconSearch,
+  IconWand,
 } from '@tabler/icons-react'
 import type { Category, PriceItem } from '../api/catalog'
 import { BottomSheet } from '../components/BottomSheet'
@@ -18,10 +20,14 @@ import {
   useCategories,
   usePriceItems,
 } from '../hooks/useCatalog'
+import {
+  CATEGORY_ICONS,
+  catIcon,
+  catIconStyle,
+} from '../lib/categoryIcons'
 import { confirmDialog, hapticSuccess } from '../lib/telegram'
 
 type Kind = 'work' | 'material'
-const EMOJIS = ['🏠', '🧱', '⬜', '◻️', '⚡', '🚿', '🔨', '📋', '🪣', '🎨', '📦']
 
 const INPUT =
   'w-full rounded-btn border border-border bg-surface-2 px-3 py-2 text-body text-text outline-none focus:border-primary'
@@ -31,6 +37,14 @@ interface Group {
   name: string
   icon: string | null
   items: PriceItem[]
+}
+
+function priceStats(items: PriceItem[]) {
+  const total = items.length
+  const priced = items.filter((i) => Number(i.default_price) > 0).length
+  const pct = total ? Math.round((priced / total) * 100) : 0
+  const good = pct === 100 || pct > 50
+  return { total, priced, pct, good }
 }
 
 export function Catalog() {
@@ -51,7 +65,7 @@ export function Catalog() {
     }))
     const orphan = all.filter((i) => i.category_id == null)
     if (orphan.length) {
-      list.push({ id: null, name: 'Kategoriyasiz', icon: '📦', items: orphan })
+      list.push({ id: null, name: 'Kategoriyasiz', icon: null, items: orphan })
     }
     return list
   }, [cats.data, items.data])
@@ -106,32 +120,47 @@ export function Catalog() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {groups.map((g) => {
-            const priceless = g.items.filter(
-              (i) => Number(i.default_price) <= 0,
-            ).length
+            const { total, priced, pct, good } = priceStats(g.items)
+            const ci = catIcon(g.icon)
+            const barColor = good ? 'var(--success)' : 'var(--danger)'
             return (
               <button
                 key={g.id ?? 'orphan'}
                 type="button"
                 onClick={() => setOpenId(g.id)}
-                className="flex flex-col items-center gap-1 rounded-card border border-border bg-surface p-4 text-center active:scale-[0.98]"
+                className="rounded-card border border-border bg-surface p-3.5 text-left active:scale-[0.98]"
               >
-                <span className="text-title">{g.icon ?? '📦'}</span>
-                <span className="text-body text-text">{g.name}</span>
-                <span className="text-label text-text-muted">
-                  {g.items.length} {unit}
-                </span>
                 <span
-                  className={
-                    priceless > 0
-                      ? 'text-label text-danger'
-                      : 'text-label text-success'
-                  }
+                  className="mb-2.5 flex h-[38px] w-[38px] items-center justify-center rounded-[11px]"
+                  style={catIconStyle(ci.color)}
                 >
-                  {priceless > 0 ? `${priceless} narxsiz` : 'narx to‘liq'}
+                  <ci.Icon size={20} />
                 </span>
+                <div className="text-[14px] font-medium text-text">{g.name}</div>
+                <div className="mb-2 text-[11px] text-text-faint">
+                  {total} {unit}
+                </div>
+                <div className="h-[3px] overflow-hidden rounded-chip bg-surface-2">
+                  <span
+                    className="block h-full"
+                    style={{ width: `${pct}%`, background: barColor }}
+                  />
+                </div>
+                <div
+                  className={`mt-1.5 text-[10px] ${
+                    pct === 100
+                      ? 'text-success'
+                      : good
+                        ? 'text-text-faint'
+                        : 'text-danger'
+                  }`}
+                >
+                  {pct === 100
+                    ? 'Narx to‘liq'
+                    : `${priced} / ${total} narxlangan`}
+                </div>
               </button>
             )
           })}
@@ -144,19 +173,27 @@ export function Catalog() {
 }
 
 // ---------------------------------------------------------------------------
-// Yangi kategoriya
+// Yangi kategoriya — ikonka to'ri + qidiruv
 // ---------------------------------------------------------------------------
 function NewCategoryCard({ kind }: { kind: Kind }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [icon, setIcon] = useState<string>(EMOJIS[0])
+  const [icon, setIcon] = useState<string>(CATEGORY_ICONS[0].name)
+  const [q, setQ] = useState('')
   const { createCategory } = useCatalogMutations()
+
+  const filtered = q.trim()
+    ? CATEGORY_ICONS.filter((c) =>
+        c.label.toLowerCase().includes(q.trim().toLowerCase()),
+      )
+    : CATEGORY_ICONS
 
   async function save() {
     if (!name.trim()) return
     await createCategory.mutateAsync({ name: name.trim(), kind, icon })
     hapticSuccess()
     setName('')
+    setQ('')
     setOpen(false)
   }
 
@@ -165,12 +202,16 @@ function NewCategoryCard({ kind }: { kind: Kind }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-border py-3 text-label text-primary active:bg-surface-2"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-card border-[1.5px] border-dashed border-border py-3.5 text-body font-medium text-primary active:bg-surface-2"
       >
-        <IconPlus size={16} /> Yangi kategoriya
+        <IconPlus size={18} /> Yangi kategoriya
       </button>
 
-      <BottomSheet open={open} onClose={() => setOpen(false)} title="Yangi kategoriya">
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Yangi kategoriya"
+      >
         <div className="space-y-3">
           <label className="block text-label text-text-muted">
             Nomi
@@ -182,25 +223,38 @@ function NewCategoryCard({ kind }: { kind: Kind }) {
               autoFocus
             />
           </label>
-          <div>
-            <div className="mb-1 text-label text-text-muted">Belgi</div>
-            <div className="flex flex-wrap gap-1">
-              {EMOJIS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setIcon(e)}
-                  className={
-                    icon === e
-                      ? 'h-10 w-10 rounded-btn bg-primary-soft text-title'
-                      : 'h-10 w-10 rounded-btn border border-border text-title'
-                  }
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
+
+          <div className="flex items-center gap-2 rounded-btn border border-border bg-surface-2 px-3 py-2">
+            <IconSearch size={15} className="shrink-0 text-text-faint" />
+            <input
+              className="min-w-0 flex-1 bg-transparent text-body text-text outline-none placeholder:text-text-faint"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ikonka qidirish…"
+            />
           </div>
+
+          <div className="grid max-h-56 grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-2 overflow-y-auto">
+            {filtered.map((c) => (
+              <button
+                key={c.name}
+                type="button"
+                onClick={() => setIcon(c.name)}
+                className={`flex flex-col items-center gap-1 rounded-btn border p-2 ${
+                  icon === c.name ? 'border-primary' : 'border-border'
+                }`}
+              >
+                <span
+                  className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px]"
+                  style={catIconStyle(c.color)}
+                >
+                  <c.Icon size={18} />
+                </span>
+                <span className="text-[10px] text-text-faint">{c.label}</span>
+              </button>
+            ))}
+          </div>
+
           <button
             type="button"
             onClick={save}
@@ -216,7 +270,7 @@ function NewCategoryCard({ kind }: { kind: Kind }) {
 }
 
 // ---------------------------------------------------------------------------
-// Kategoriya ichi — xizmatlar ro'yxati
+// Kategoriya ichi
 // ---------------------------------------------------------------------------
 function CategoryDetail({
   group,
@@ -239,10 +293,11 @@ function CategoryDetail({
   const priceRefs = useRef<(HTMLInputElement | null)[]>([])
   const priceless = group.items.filter((i) => Number(i.default_price) <= 0)
   const noun = kind === 'work' ? 'xizmat' : 'material'
+  const ci = catIcon(group.icon)
 
   return (
     <Screen
-      title={`${group.icon ?? '📦'} ${group.name}`}
+      title={group.name}
       action={
         <button
           type="button"
@@ -253,13 +308,29 @@ function CategoryDetail({
         </button>
       }
     >
+      <div className="mb-3.5 flex items-center gap-2.5">
+        <span
+          className="flex h-9 w-9 items-center justify-center rounded-[11px]"
+          style={catIconStyle(ci.color)}
+        >
+          <ci.Icon size={19} />
+        </span>
+        <div>
+          <div className="text-[17px] font-medium text-text">{group.name}</div>
+          <div className="text-[11px] text-text-faint">
+            {group.items.length} {noun}
+            {priceless.length > 0 && ` · ${priceless.length} narxsiz`}
+          </div>
+        </div>
+      </div>
+
       {priceless.length > 0 && (
         <button
           type="button"
           onClick={() => setFillOpen(true)}
-          className="mb-3 w-full rounded-btn bg-primary-soft py-2.5 text-body text-primary active:scale-[0.99]"
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-btn border border-primary py-2.5 text-[13px] font-medium text-primary active:scale-[0.99]"
         >
-          Barcha narxlarni to‘ldirish ({priceless.length})
+          <IconWand size={16} /> Barcha narxlarni to‘ldirish
         </button>
       )}
 
@@ -268,37 +339,29 @@ function CategoryDetail({
       ) : (
         <div className="overflow-hidden rounded-card border border-border bg-surface">
           {group.items.map((it, idx) => (
-            <div
+            <PriceRow
               key={it.id}
-              className="flex items-center gap-2 border-b border-border px-3 py-2 last:border-b-0"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-body text-text">{it.name}</div>
-                <div className="text-label text-text-muted">
-                  {it.unit_label ?? it.unit}
-                </div>
-              </div>
-              <PriceCell
-                ref={(el) => {
-                  priceRefs.current[idx] = el
-                }}
-                value={Number(it.default_price) || null}
-                onCommit={(v) => {
-                  if ((Number(it.default_price) || 0) !== (v ?? 0)) {
-                    updateItem.mutate({ id: it.id, default_price: v ?? 0 })
+              item={it}
+              ref={(el) => {
+                priceRefs.current[idx] = el
+              }}
+              onCommit={(v) => {
+                if ((Number(it.default_price) || 0) !== (v ?? 0)) {
+                  updateItem.mutate({ id: it.id, default_price: v ?? 0 })
+                }
+              }}
+              onEnter={() => {
+                // keyingi narxsiz qatorga o'tadi
+                for (let j = idx + 1; j < group.items.length; j++) {
+                  if (Number(group.items[j].default_price) <= 0) {
+                    priceRefs.current[j]?.focus()
+                    return
                   }
-                }}
-                onEnter={() => priceRefs.current[idx + 1]?.focus()}
-              />
-              <button
-                type="button"
-                onClick={() => setMenuItem(it)}
-                aria-label="Amallar"
-                className="shrink-0 text-text-faint active:text-text"
-              >
-                <IconDotsVertical size={18} />
-              </button>
-            </div>
+                }
+                priceRefs.current[idx]?.blur()
+              }}
+              onMenu={() => setMenuItem(it)}
+            />
           ))}
         </div>
       )}
@@ -311,7 +374,6 @@ function CategoryDetail({
         <IconPlus size={16} /> Yangi {noun}
       </button>
 
-      {/* qator menyusi */}
       <BottomSheet
         open={!!menuItem}
         onClose={() => setMenuItem(null)}
@@ -351,7 +413,6 @@ function CategoryDetail({
         </div>
       </BottomSheet>
 
-      {/* boshqa kategoriyaga ko'chirish */}
       <BottomSheet
         open={!!moveItem}
         onClose={() => setMoveItem(null)}
@@ -374,9 +435,18 @@ function CategoryDetail({
                   })
                   hapticSuccess()
                 }}
-                className="min-h-[44px] w-full rounded-btn px-3 text-left text-body text-text active:bg-surface-2"
+                className="flex min-h-[44px] w-full items-center gap-2 rounded-btn px-3 text-left text-body text-text active:bg-surface-2"
               >
-                {c.icon ?? '📦'} {c.name}
+                <span
+                  className="flex h-6 w-6 items-center justify-center rounded-[7px]"
+                  style={catIconStyle(catIcon(c.icon).color)}
+                >
+                  {(() => {
+                    const I = catIcon(c.icon).Icon
+                    return <I size={13} />
+                  })()}
+                </span>
+                {c.name}
               </button>
             ))}
         </div>
@@ -438,35 +508,58 @@ function SheetBtn({
   )
 }
 
-// inline narx katakchasi
-interface PriceCellProps {
-  value: number | null
+// Qatorda tahrirlanadigan narx
+interface PriceRowProps {
+  item: PriceItem
   onCommit: (v: number | null) => void
   onEnter: () => void
+  onMenu: () => void
 }
 
-const PriceCell = forwardRef<HTMLInputElement, PriceCellProps>(
-  function PriceCell({ value, onCommit, onEnter }, ref) {
-    const [v, setV] = useState<number | null>(value)
-    const last = useRef(value)
-    if (last.current !== value) {
-      last.current = value
-      setV(value)
-    }
-    return (
+const PriceRow = forwardRef<HTMLInputElement, PriceRowProps>(function PriceRow(
+  { item, onCommit, onEnter, onMenu },
+  ref,
+) {
+  const [v, setV] = useState<number | null>(Number(item.default_price) || null)
+  const [focused, setFocused] = useState(false)
+  const last = useRef<number | null>(Number(item.default_price) || null)
+  const cur = Number(item.default_price) || null
+  if (last.current !== cur) {
+    last.current = cur
+    setV(cur)
+  }
+  const missing = (v ?? 0) <= 0
+
+  return (
+    <div
+      className={`flex items-center gap-2 border-b border-border px-3 py-2.5 last:border-b-0 ${
+        focused ? 'bg-primary-soft' : ''
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] text-text">{item.name}</div>
+        <div className="text-[11px] text-text-faint">
+          {item.unit_label ?? item.unit}
+        </div>
+      </div>
       <MoneyInput
         ref={ref}
         value={v}
         onChange={setV}
-        placeholder="narx"
+        placeholder={missing ? 'narx yo‘q' : 'narx'}
         aria-label="narx"
-        className={
-          'w-24 shrink-0 rounded-btn border px-2 py-1.5 text-right text-body outline-none focus:border-primary ' +
-          ((v ?? 0) <= 0
-            ? 'border-danger bg-danger-soft text-danger'
-            : 'border-border bg-surface-2 text-text')
-        }
-        onBlur={() => onCommit(v)}
+        className={`w-24 shrink-0 bg-transparent py-1 text-right text-[14px] font-medium outline-none ${
+          focused
+            ? 'border-b-2 border-primary text-primary'
+            : missing
+              ? 'text-danger'
+              : 'text-text'
+        }`}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false)
+          onCommit(v)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault()
@@ -475,9 +568,17 @@ const PriceCell = forwardRef<HTMLInputElement, PriceCellProps>(
           }
         }}
       />
-    )
-  },
-)
+      <button
+        type="button"
+        onClick={onMenu}
+        aria-label="Amallar"
+        className="shrink-0 text-text-faint active:text-text"
+      >
+        <IconDotsVertical size={18} />
+      </button>
+    </div>
+  )
+})
 
 // ---------------------------------------------------------------------------
 // Narxlarni ketma-ket to'ldirish

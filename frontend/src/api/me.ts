@@ -19,6 +19,9 @@ export interface Me {
   social_links: SocialLink[]
   active_projects: number
   completed_projects: number
+  catalog_items: number
+  catalog_unpriced: number
+  notes_count: number
 }
 
 export interface MePatch {

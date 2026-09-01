@@ -2,9 +2,10 @@ import { useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   IconChevronRight,
-  IconNote,
-  IconTool,
-  IconUsersGroup,
+  IconNotes,
+  IconPencil,
+  IconTag,
+  IconUsers,
 } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -55,49 +56,94 @@ export function Profile() {
   const tgPhoto = getTelegramPhotoUrl()
   const avatarSrc = me.avatar_url ? mediaUrl(me.avatar_url) : tgPhoto
 
+  const initial = (me.full_name || '?').slice(0, 1).toUpperCase()
+
   return (
     <Screen title="Profil">
-      {/* Gradient sarlavha */}
-      <div
-        style={{ background: 'var(--grad)' }}
-        className="flex flex-col items-center rounded-card px-4 pb-5 pt-6 text-on-primary"
-      >
-        <button
-          type="button"
-          onClick={() => setAvatarOpen(true)}
-          className="rounded-full bg-white/20 p-1 active:scale-95"
+      {/* Gradient sarlavha — kafel naqshi FAQAT shu ekranda */}
+      <div className="overflow-hidden rounded-[18px]">
+        <div
+          className="relative px-4 pb-[18px] pt-[22px] text-center text-on-primary"
+          style={{ background: 'var(--grad)' }}
         >
-          <span className="flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full bg-primary-soft text-title text-primary">
-            {avatarSrc ? (
-              <img
-                src={avatarSrc}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              (me.full_name || '?').slice(0, 1).toUpperCase()
-            )}
-          </span>
-        </button>
-        <div className="mt-2 text-title">{me.full_name}</div>
-        <div className="text-label opacity-90">
-          {me.phone ?? 'telefon kiritilmagan'}
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern
+                id="profile-tile"
+                width="17"
+                height="17"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M17 0 L0 0 L0 17"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.20)"
+                  strokeWidth="0.9"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#profile-tile)" />
+          </svg>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setAvatarOpen(true)}
+              className="mx-auto block h-[84px] w-[84px] rounded-full bg-white/30 p-[3px] active:scale-95"
+            >
+              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-primary-soft text-[30px] font-semibold text-primary">
+                {avatarSrc ? (
+                  <img
+                    src={avatarSrc}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initial
+                )}
+              </span>
+            </button>
+            <div className="mt-2.5 text-[20px] font-semibold">
+              {me.full_name}
+            </div>
+            <div className="text-[12px] text-white/85">
+              {me.phone ?? 'telefon kiritilmagan'}
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="mt-2.5 inline-flex items-center gap-1.5 rounded-chip bg-white/20 px-[13px] py-[5px] text-[12px] active:scale-95"
+            >
+              <IconPencil size={13} /> Tahrirlash
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setEditOpen(true)}
-          className="mt-1 rounded-chip bg-white/15 px-3 py-0.5 text-label active:scale-95"
-        >
-          Tahrirlash
-        </button>
+        <div className="flex text-on-primary">
+          <div
+            className="flex-1 py-[11px] text-center"
+            style={{ background: 'var(--grad-stat-a)' }}
+          >
+            <span className="text-[17px] font-semibold">
+              {me.active_projects}
+            </span>
+            <span className="ml-1.5 text-[11px] text-white/80">faol obyekt</span>
+          </div>
+          <div className="w-px bg-white/25" />
+          <div
+            className="flex-1 py-[11px] text-center"
+            style={{ background: 'var(--grad-stat-b)' }}
+          >
+            <span className="text-[17px] font-semibold">
+              {me.completed_projects}
+            </span>
+            <span className="ml-1.5 text-[11px] text-white/80">tugatilgan</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <Metric label="Faol" value={me.active_projects} />
-        <Metric label="Tugadi" value={me.completed_projects} />
-      </div>
-
-      <h2 className="mb-1.5 mt-5 text-label uppercase text-text-muted">
+      <h2 className="mb-1.5 mt-5 text-[11px] uppercase tracking-[0.06em] text-text-faint">
         Mening sahifalarim
       </h2>
       <div className="overflow-hidden rounded-card border border-border bg-surface">
@@ -110,11 +156,23 @@ export function Profile() {
       </div>
 
       <div className="mt-3 overflow-hidden rounded-card border border-border bg-surface">
-        <LinkRow to="/catalog" icon={<IconTool size={20} />} label="Xizmatlarim" />
-        <LinkRow to="/notes" icon={<IconNote size={20} />} label="Qaydlarim" />
-        <div className="flex items-center gap-3 px-4 py-3 opacity-60">
-          <span className="text-text-muted">
-            <IconUsersGroup size={20} />
+        <LinkRow
+          to="/catalog"
+          icon={<IconTag size={18} />}
+          tint="bg-primary-soft text-primary"
+          label="Xizmatlarim"
+          sub={`${me.catalog_items} pozitsiya · ${me.catalog_unpriced} narxsiz`}
+        />
+        <LinkRow
+          to="/notes"
+          icon={<IconNotes size={18} />}
+          tint="bg-[#FEF0C7] text-[#B45309]"
+          label="Qaydlarim"
+          sub={`${me.notes_count} ta ro‘yxat`}
+        />
+        <div className="flex items-center gap-3 px-4 py-3 opacity-50">
+          <span className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-surface-2 text-text-muted">
+            <IconUsers size={18} />
           </span>
           <span className="flex-1 text-body text-text">Brigada</span>
           <span className="rounded-chip bg-surface-2 px-2 py-0.5 text-label text-text-muted">
@@ -176,31 +234,35 @@ export function Profile() {
   )
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-card border border-border bg-surface p-4 text-center">
-      <div className="text-title text-text">{value}</div>
-      <div className="text-label text-text-muted">{label}</div>
-    </div>
-  )
-}
-
 function LinkRow({
   to,
   icon,
+  tint,
   label,
+  sub,
 }: {
   to: string
   icon: ReactNode
+  tint: string
   label: string
+  sub?: string
 }) {
   return (
     <Link
       to={to}
       className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 active:bg-surface-2"
     >
-      <span className="text-primary">{icon}</span>
-      <span className="flex-1 text-body text-text">{label}</span>
+      <span
+        className={`flex h-[34px] w-[34px] items-center justify-center rounded-[10px] ${tint}`}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-body text-text">{label}</span>
+        {sub && (
+          <span className="block text-[11px] text-text-faint">{sub}</span>
+        )}
+      </span>
       <IconChevronRight size={16} className="text-text-faint" />
     </Link>
   )

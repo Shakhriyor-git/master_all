@@ -15,6 +15,7 @@ interface Props {
   id?: string
   'aria-label'?: string
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void
+  onFocus?: (e: FocusEvent<HTMLInputElement>) => void
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 

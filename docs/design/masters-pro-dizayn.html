@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Masters Pro — dizayn</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:#1a1a1f;color:#e8e8ec;padding:32px 20px 80px}
+h1{font-size:26px;font-weight:600;margin-bottom:6px}
+.sub{font-size:14px;color:#8a8a96;margin-bottom:36px}
+h2{font-size:17px;font-weight:600;margin:44px 0 6px;padding-top:22px;border-top:1px solid #2e2e36}
+.note{font-size:13px;color:#8a8a96;margin-bottom:18px;line-height:1.6;max-width:760px}
+.row{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.col{width:360px}
+.cap{font-size:11px;letter-spacing:.06em;color:#8a8a96;margin-bottom:7px}
+
+/* ===== THEME TOKENS ===== */
+.L{--bg:#F5F6F8;--sf:#FFFFFF;--sf2:#EEF1F5;--pr:#2563EB;--prs:#DCE7FD;--tx:#1E293B;--mu:#757681;--fa:#9AA0AA;--bd:#E2E6EC;--ac:#BC4800;--acs:#FBE3DA;--su:#0B5C3E;--sus:#D6F0E4;--da:#C0392B;--das:#FBE0DC;
+  --bWork:#C3D6FA;--bMat:#F0D2C2;--bExp:#F0CFC9;--bPay:#A8D9C0;--payBg:#EAF7F0;--g1:#2563EB;--g2:#5B8DEF}
+.D{--bg:#0B0B10;--sf:#16161F;--sf2:#1F1F2B;--pr:#8B5CF6;--prs:#2A1F4A;--tx:#F1F1F5;--mu:#9A9AA8;--fa:#6E6E7C;--bd:#2A2A38;--ac:#E2703A;--acs:#3A2418;--su:#6FE0B0;--sus:#14382B;--da:#E5564A;--das:#3A1D1A;
+  --bWork:#403268;--bMat:#55351F;--bExp:#552B26;--bPay:#2C5C45;--payBg:#12291F;--g1:#7C3AED;--g2:#A78BFA}
+
+.ph{background:var(--bg);border-radius:20px;padding:14px;border:.5px solid var(--bd);color:var(--tx);position:relative;overflow:hidden}
+.ttl{font-size:19px;font-weight:500;margin-bottom:12px}
+.card{background:var(--sf);border:.5px solid var(--bd);border-radius:14px}
+.mut{color:var(--mu)}.fai{color:var(--fa)}
+.num{font-variant-numeric:tabular-nums}
+.sec{font-size:11px;letter-spacing:.06em;color:var(--fa);margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+.lnk{color:var(--pr);font-size:11px}
+.ico{border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* hero */
+.hero{border-radius:16px;padding:18px;position:relative;overflow:hidden;background:linear-gradient(150deg,var(--g1),var(--g2) 130%);margin-bottom:12px}
+.hero .blob{position:absolute;right:-34px;top:-34px;width:126px;height:126px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero .lbl{font-size:12px;color:rgba(255,255,255,.82)}
+.hero .big{font-size:34px;font-weight:600;color:#fff;line-height:1.08;letter-spacing:-.02em}
+.hero .div{height:1px;background:rgba(255,255,255,.2);margin:14px 0 10px}
+.hero .sm{display:flex;gap:16px;font-size:11px;color:rgba(255,255,255,.88)}
+
+/* quick */
+.quick{display:flex;gap:8px;margin-bottom:16px}
+.qb{flex:1;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;padding:10px 4px;text-align:center}
+.qb i{font-size:19px}.qb div{font-size:10px;color:var(--mu);margin-top:3px}
+
+/* list row */
+.lr{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.lr .t{font-size:13px}.lr .s{font-size:11px;color:var(--fa)}
+.sep{height:.5px;background:var(--bd);margin-left:50px}
+
+/* entry cards with colored edge */
+.ec{border-radius:13px;padding:11px 12px;margin-bottom:8px;background:var(--sf);border:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+.ec.work{border-color:var(--bWork)}
+.ec.mat{border-color:var(--bMat)}
+.ec.exp{border-color:var(--bExp)}
+.ec.pay{border-color:var(--bPay);background:var(--payBg)}
+
+/* chips */
+.chip{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--sf2);color:var(--mu)}
+.seg{display:flex;gap:4px;background:var(--sf2);border-radius:999px;padding:3px;margin-bottom:14px}
+.seg span{flex:1;text-align:center;font-size:12px;padding:7px;border-radius:999px;color:var(--mu)}
+.seg span.on{background:var(--pr);color:#fff}
+
+/* catalog */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.cc{background:var(--sf);border:.5px solid var(--bd);border-radius:14px;padding:14px}
+.cc .nm{font-size:14px;font-weight:500}
+.cc .ct{font-size:11px;color:var(--fa);margin-bottom:8px}
+.bar{height:3px;background:var(--sf2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%}
+.dash{border:1.5px dashed var(--bd);border-radius:14px;padding:16px;text-align:center;color:var(--pr)}
+
+/* nav */
+.nav{display:flex;align-items:flex-end;justify-content:space-around;background:var(--sf);border-top:.5px solid var(--bd);height:62px;padding:0 4px;position:relative;border-radius:0 0 20px 20px;margin:14px -14px -14px}
+.nt{flex:1;text-align:center;padding-bottom:9px}
+.nt i{font-size:23px;color:var(--fa);display:block}
+.nt span{font-size:10px;color:var(--fa)}
+.nt.on i,.nt.on span{color:var(--pr)}
+.fab{width:52px;height:52px;border-radius:50%;background:var(--pr);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;margin:0 4px;transform:translateY(-14px);box-shadow:0 4px 14px rgba(37,99,235,.35);flex:none}
+.D .fab{box-shadow:0 4px 14px rgba(139,92,246,.4)}
+
+/* form */
+.fl{font-size:11px;color:var(--mu);margin-bottom:5px}
+.fi{background:var(--sf);border:.5px solid var(--bd);border-radius:12px;padding:13px;margin-bottom:8px}
+.qty{display:flex;gap:6px;margin-bottom:16px}
+.qty span{flex:1;text-align:center;font-size:13px;padding:9px;border-radius:10px;background:var(--sf);border:.5px solid var(--bd);color:var(--mu)}
+.seg2{display:flex;gap:4px;background:var(--sf2);border-radius:12px;padding:3px;margin-bottom:16px}
+.seg2 span{flex:1;text-align:center;font-size:12px;padding:9px;border-radius:9px;color:var(--mu)}
+.seg2 span.on{background:var(--pr);color:#fff}
+.total{background:var(--prs);border-radius:12px;padding:14px;text-align:center}
+.mainbtn{background:var(--pr);border-radius:12px;padding:14px;text-align:center;font-size:15px;font-weight:500;color:#fff;margin-top:14px}
+.aiin{display:flex;gap:8px;align-items:center;background:var(--sf);border:1px solid var(--pr);border-radius:14px;padding:11px 12px;margin-bottom:6px}
+.orline{display:flex;align-items:center;gap:8px;margin:14px 0 12px}
+.orline div{flex:1;height:.5px;background:var(--bd)}
+.orline span{font-size:10px;color:var(--fa)}
+.pill{font-size:12px;padding:7px 12px;border-radius:999px;background:var(--sf);border:.5px solid var(--bd);color:var(--mu);white-space:nowrap}
+.pill.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+</style>
+</head>
+<body>
+
+<h1>Masters Pro — dizayn</h1>
+<div class="sub">Barcha ekranlar, kunduzgi va tungi mavzuda. 2026-09-01</div>
+
+<!-- ==================== 1. NAVIGATSIYA ==================== -->
+<h2>1. Pastki navigatsiya</h2>
+<div class="note">
+Sakrash sababi: tab almashganda ikonka o'lchami yoki panel balandligi o'zgaradi. Yechim — panel balandligi <b>62px qat'iy</b>, ikonka har doim <b>23px</b>, faqat rang o'zgaradi. Ikonka animatsiyasi yo'q.
+<br>+ tugmasi 52px, panelga nisbatan 14px tepaga chiqadi va soya bilan ajraladi.
+</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph" style="padding-bottom:0">
+      <div style="height:70px"></div>
+      <div class="nav">
+        <div class="nt on"><i class="ti ti-home-filled"></i><span>Asosiy</span></div>
+        <div class="nt"><i class="ti ti-history"></i><span>Tarix</span></div>
+        <div class="fab"><i class="ti ti-plus"></i></div>
+        <div class="nt"><i class="ti ti-user"></i><span>Profil</span></div>
+        <div class="nt"><i class="ti ti-settings"></i><span>Sozlamalar</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph" style="padding-bottom:0">
+      <div style="height:70px"></div>
+      <div class="nav">
+        <div class="nt on"><i class="ti ti-home-filled"></i><span>Asosiy</span></div>
+        <div class="nt"><i class="ti ti-history"></i><span>Tarix</span></div>
+        <div class="fab"><i class="ti ti-plus"></i></div>
+        <div class="nt"><i class="ti ti-user"></i><span>Profil</span></div>
+        <div class="nt"><i class="ti ti-settings"></i><span>Sozlamalar</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 2. ASOSIY ==================== -->
+<h2>2. Asosiy ekran</h2>
+<div class="note">
+Bitta katta raqam — mijoz qarzi. Ostida to'rtta tez tugma: bir bosishda qo'shish. Keyin so'nggi yozuvlar, ranglar bo'yicha ajratilgan.
+</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div style="font-size:11px" class="fai">Obyekt</div><div style="font-size:15px;font-weight:500">145-xonadon <span class="fai" style="font-size:12px">▾</span></div></div>
+        <div class="ico" style="width:30px;height:30px;border-radius:50%;background:var(--prs)"><i class="ti ti-bell" style="font-size:15px;color:var(--pr)"></i></div>
+      </div>
+      <div class="hero"><div class="blob"></div>
+        <div class="lbl">Mijoz qarzi</div>
+        <div class="big num">660 000</div>
+        <div class="lbl" style="margin-top:2px">so'm</div>
+        <div class="div"></div>
+        <div class="sm"><span>Ishlar <b class="num">660 000</b></span><span>To'langan <b class="num">0</b></span></div>
+      </div>
+      <div class="quick">
+        <div class="qb"><i class="ti ti-tool" style="color:var(--pr)"></i><div>Ish</div></div>
+        <div class="qb"><i class="ti ti-package" style="color:var(--ac)"></i><div>Material</div></div>
+        <div class="qb"><i class="ti ti-receipt" style="color:var(--da)"></i><div>Xarajat</div></div>
+        <div class="qb"><i class="ti ti-cash" style="color:var(--su)"></i><div>To'lov</div></div>
+      </div>
+      <div class="sec"><span>SO'NGGI YOZUVLAR</span><span class="lnk">Barchasi</span></div>
+      <div class="ec work">
+        <div class="ico" style="width:28px;height:28px;background:var(--prs)"><i class="ti ti-tool" style="font-size:14px;color:var(--pr)"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Oboy yopishtirish</div><div style="font-size:11px" class="fai">10 m² · bugun</div></div>
+        <div class="num" style="font-size:13px;color:var(--pr)">300 000</div>
+      </div>
+      <div class="ec mat">
+        <div class="ico" style="width:28px;height:28px;background:var(--acs)"><i class="ti ti-package" style="font-size:14px;color:var(--ac)"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Qurilish mollari</div><div style="font-size:11px" class="fai">DOM STROY · kecha</div></div>
+        <div class="num" style="font-size:13px;color:var(--ac)">2 867 500</div>
+      </div>
+      <div class="ec pay">
+        <div class="ico" style="width:28px;height:28px;background:var(--sus)"><i class="ti ti-cash" style="font-size:14px;color:var(--su)"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Mijoz to'lovi</div><div style="font-size:11px" class="fai">Ish haqi · 29 avg</div></div>
+        <div class="num" style="font-size:13px;color:var(--su)">+1 753 000</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div style="font-size:11px" class="fai">Obyekt</div><div style="font-size:15px;font-weight:500">145-xonadon <span class="fai" style="font-size:12px">▾</span></div></div>
+        <div class="ico" style="width:30px;height:30px;border-radius:50%;background:var(--prs)"><i class="ti ti-bell" style="font-size:15px;color:var(--pr)"></i></div>
+      </div>
+      <div class="hero"><div class="blob"></div>
+        <div class="lbl">Mijoz qarzi</div>
+        <div class="big num">660 000</div>
+        <div class="lbl" style="margin-top:2px">so'm</div>
+        <div class="div"></div>
+        <div class="sm"><span>Ishlar <b class="num">660 000</b></span><span>To'langan <b class="num">0</b></span></div>
+      </div>
+      <div class="quick">
+        <div class="qb"><i class="ti ti-tool" style="color:var(--pr)"></i><div>Ish</div></div>
+        <div class="qb"><i class="ti ti-package" style="color:var(--ac)"></i><div>Material</div></div>
+        <div class="qb"><i class="ti ti-receipt" style="color:var(--da)"></i><div>Xarajat</div></div>
+        <div class="qb"><i class="ti ti-cash" style="color:var(--su)"></i><div>To'lov</div></div>
+      </div>
+      <div class="sec"><span>SO'NGGI YOZUVLAR</span><span class="lnk">Barchasi</span></div>
+      <div class="ec work">
+        <div class="ico" style="width:28px;height:28px;background:var(--prs)"><i class="ti ti-tool" style="font-size:14px;color:#B49BF5"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Oboy yopishtirish</div><div style="font-size:11px" class="fai">10 m² · bugun</div></div>
+        <div class="num" style="font-size:13px;color:var(--pr)">300 000</div>
+      </div>
+      <div class="ec mat">
+        <div class="ico" style="width:28px;height:28px;background:var(--acs)"><i class="ti ti-package" style="font-size:14px;color:#F0A87E"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Qurilish mollari</div><div style="font-size:11px" class="fai">DOM STROY · kecha</div></div>
+        <div class="num" style="font-size:13px;color:var(--ac)">2 867 500</div>
+      </div>
+      <div class="ec pay">
+        <div class="ico" style="width:28px;height:28px;background:var(--sus)"><i class="ti ti-cash" style="font-size:14px;color:var(--su)"></i></div>
+        <div style="flex:1"><div style="font-size:13px">Mijoz to'lovi</div><div style="font-size:11px" class="fai">Ish haqi · 29 avg</div></div>
+        <div class="num" style="font-size:13px;color:var(--su)">+1 753 000</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 3. TARIX ==================== -->
+<h2>3. Tarix — rangli chegaralar</h2>
+<div class="note">
+Har bir yozuv turi o'z chegara rangiga ega: <b>ish — ko'k</b>, <b>material — sariq-jigarrang</b>, <b>xarajat — qizil</b>, <b>mijoz to'lovi — och yashil fon, to'qroq yashil chegara</b>. Chegara ingichka (1px), ko'zni charchatmaydi.
+</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph">
+      <div class="seg"><span class="on">Barchasi</span><span>Ishlar</span><span>Material</span><span>Xarajat</span></div>
+      <div style="font-size:11px;letter-spacing:.04em;margin-bottom:8px" class="fai">BUGUN · 1 SENTABR</div>
+      <div class="ec pay">
+        <div class="ico" style="width:30px;height:30px;background:var(--sus)"><i class="ti ti-cash" style="font-size:15px;color:var(--su)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Mijoz to'lovi</div><div style="display:flex;gap:5px;margin-top:4px"><span class="chip" style="background:var(--sus);color:var(--su)">Ish haqi</span><span class="chip">Naqd</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--su)">+90 000</div><div style="font-size:10px" class="fai">13:49</div></div>
+      </div>
+      <div class="ec work">
+        <div class="ico" style="width:30px;height:30px;background:var(--prs)"><i class="ti ti-tool" style="font-size:15px;color:var(--pr)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Gipsokarton yopishtirish</div><div style="font-size:11px" class="fai">5 m² × 25 000</div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--pr)">125 000</div><div style="font-size:10px" class="fai">13:47</div></div>
+      </div>
+      <div class="ec mat">
+        <div class="ico" style="width:30px;height:30px;background:var(--acs)"><i class="ti ti-package" style="font-size:15px;color:var(--ac)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Shlakablok</div><div style="font-size:11px" class="fai">500 dona × 3 000</div><div style="margin-top:4px"><span class="chip">Naqd</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--ac)">1 500 000</div><div style="font-size:10px" class="fai">11:38</div></div>
+      </div>
+      <div class="ec exp">
+        <div class="ico" style="width:30px;height:30px;background:var(--das)"><i class="ti ti-receipt" style="font-size:15px;color:var(--da)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Tushlik</div><div style="margin-top:4px"><span class="chip">Karta</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--da)">85 000</div><div style="font-size:10px" class="fai">13:05</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph">
+      <div class="seg"><span class="on">Barchasi</span><span>Ishlar</span><span>Material</span><span>Xarajat</span></div>
+      <div style="font-size:11px;letter-spacing:.04em;margin-bottom:8px" class="fai">BUGUN · 1 SENTABR</div>
+      <div class="ec pay">
+        <div class="ico" style="width:30px;height:30px;background:var(--sus)"><i class="ti ti-cash" style="font-size:15px;color:var(--su)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Mijoz to'lovi</div><div style="display:flex;gap:5px;margin-top:4px"><span class="chip" style="background:var(--sus);color:var(--su)">Ish haqi</span><span class="chip">Naqd</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--su)">+90 000</div><div style="font-size:10px" class="fai">13:49</div></div>
+      </div>
+      <div class="ec work">
+        <div class="ico" style="width:30px;height:30px;background:var(--prs)"><i class="ti ti-tool" style="font-size:15px;color:#B49BF5"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Gipsokarton yopishtirish</div><div style="font-size:11px" class="fai">5 m² × 25 000</div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--pr)">125 000</div><div style="font-size:10px" class="fai">13:47</div></div>
+      </div>
+      <div class="ec mat">
+        <div class="ico" style="width:30px;height:30px;background:var(--acs)"><i class="ti ti-package" style="font-size:15px;color:#F0A87E"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Shlakablok</div><div style="font-size:11px" class="fai">500 dona × 3 000</div><div style="margin-top:4px"><span class="chip">Naqd</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--ac)">1 500 000</div><div style="font-size:10px" class="fai">11:38</div></div>
+      </div>
+      <div class="ec exp">
+        <div class="ico" style="width:30px;height:30px;background:var(--das)"><i class="ti ti-receipt" style="font-size:15px;color:var(--da)"></i></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">Tushlik</div><div style="margin-top:4px"><span class="chip">Karta</span></div></div>
+        <div style="text-align:right"><div class="num" style="font-size:14px;font-weight:500;color:var(--da)">85 000</div><div style="font-size:10px" class="fai">13:05</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 4. QO'SHISH ==================== -->
+<h2>4. Qo'shish — tanlash va to'ldirish</h2>
+<div class="note">
+Ish, material va xarajat uchun <b>bir xil ekran</b>. Faqat sarlavha va ikonka rangi farq qiladi. Tepada AI matn maydoni va kamera; ostida kategoriya, qidiruv, ro'yxat.
+</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">MATERIAL — TANLASH</div>
+    <div class="ph">
+      <div class="ttl">Material qo'shish</div>
+      <div class="aiin">
+        <i class="ti ti-sparkles" style="font-size:18px;color:var(--pr)"></i>
+        <span style="flex:1;font-size:13px" class="fai">sement 5 qop 650 ming…</span>
+        <div class="ico" style="width:30px;height:30px;background:var(--sf2)"><i class="ti ti-camera" style="font-size:16px;color:var(--pr)"></i></div>
+      </div>
+      <div style="font-size:10px;text-align:center" class="fai">Yozing yoki chekni suratga oling</div>
+      <div class="orline"><div></div><span>yoki tanlang</span><div></div></div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;overflow:hidden">
+        <span class="pill on">Aralashmalar</span><span class="pill">Kafel</span><span class="pill">Elektr</span>
+      </div>
+      <div class="card" style="padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-search" style="font-size:15px;color:var(--fa)"></i><span style="font-size:13px" class="fai">Qidirish…</span>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="lr" style="background:var(--prs)"><i class="ti ti-pencil" style="font-size:17px;color:var(--pr)"></i><span style="font-size:13px;font-weight:500;color:var(--pr)">Qo'lda kiritish</span></div>
+        <div class="sep" style="margin-left:0"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Sement</span><span class="num" style="font-size:12px;color:var(--mu)">130 000 · qop</span></div>
+        <div class="sep" style="margin-left:12px"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Gips</span><span style="font-size:12px;color:var(--da)">narxsiz · qop</span></div>
+        <div class="sep" style="margin-left:12px"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Shpatlyovka</span><span class="num" style="font-size:12px;color:var(--mu)">45 000 · qop</span></div>
+        <div class="sep" style="margin-left:0"></div>
+        <div class="lr"><i class="ti ti-plus" style="font-size:16px;color:var(--mu)"></i><span style="font-size:13px" class="mut">Yangi material</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col L">
+    <div class="cap">MATERIAL — TO'LDIRISH</div>
+    <div class="ph">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div class="ico" style="width:38px;height:38px;border-radius:11px;background:var(--acs)"><i class="ti ti-bucket" style="font-size:20px;color:var(--ac)"></i></div>
+        <div><div style="font-size:16px;font-weight:500">Sement</div><div style="font-size:11px" class="fai">Aralashmalar · qop</div></div>
+      </div>
+      <div class="fl">Miqdor</div>
+      <div class="fi num" style="font-size:22px;font-weight:500">5</div>
+      <div class="qty"><span>1</span><span>5</span><span>10</span><span>+1</span><span>−1</span></div>
+      <div class="fl">Bir qop narxi</div>
+      <div class="fi num" style="font-size:18px;margin-bottom:16px">130 000</div>
+      <div class="fl">Qanday to'landi</div>
+      <div class="seg2"><span class="on">Naqd</span><span>Karta</span><span>O'tkazma</span></div>
+      <div class="total">
+        <div style="font-size:11px;color:var(--pr)">5 qop × 130 000 so'm</div>
+        <div class="num" style="font-size:24px;font-weight:600;color:var(--pr)">650 000 so'm</div>
+      </div>
+      <div class="mainbtn">Saqlash</div>
+    </div>
+  </div>
+
+  <div class="col D">
+    <div class="cap">ISH — TANLASH (TUNGI)</div>
+    <div class="ph">
+      <div class="ttl">Ish qo'shish</div>
+      <div class="aiin">
+        <i class="ti ti-sparkles" style="font-size:18px;color:var(--pr)"></i>
+        <span style="flex:1;font-size:13px" class="fai">shpaklovka 11 kvadrat qildim…</span>
+        <div class="ico" style="width:30px;height:30px;background:var(--sf2)"><i class="ti ti-microphone" style="font-size:16px;color:var(--pr)"></i></div>
+      </div>
+      <div style="font-size:10px;text-align:center" class="fai">Yozing yoki ayting</div>
+      <div class="orline"><div></div><span>yoki tanlang</span><div></div></div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;overflow:hidden">
+        <span class="pill on">Devor</span><span class="pill">Shift</span><span class="pill">Pol</span>
+      </div>
+      <div class="card" style="padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-search" style="font-size:15px;color:var(--fa)"></i><span style="font-size:13px" class="fai">Qidirish…</span>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="lr" style="background:var(--prs)"><i class="ti ti-pencil" style="font-size:17px;color:var(--pr)"></i><span style="font-size:13px;font-weight:500;color:var(--pr)">Qo'lda kiritish</span></div>
+        <div class="sep" style="margin-left:0"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Shtukaturka</span><span class="num" style="font-size:12px;color:var(--mu)">30 000 · m²</span></div>
+        <div class="sep" style="margin-left:12px"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Shpatlyovka</span><span class="num" style="font-size:12px;color:var(--mu)">25 000 · m²</span></div>
+        <div class="sep" style="margin-left:12px"></div>
+        <div style="display:flex;justify-content:space-between;padding:12px"><span style="font-size:13px">Oboy yopishtirish</span><span style="font-size:12px;color:var(--da)">narxsiz · m²</span></div>
+        <div class="sep" style="margin-left:0"></div>
+        <div class="lr"><i class="ti ti-plus" style="font-size:16px;color:var(--mu)"></i><span style="font-size:13px" class="mut">Yangi xizmat</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 5. XIZMATLARIM ==================== -->
+<h2>5. Xizmatlarim — katalog</h2>
+<div class="note">
+Emoji o'rniga ikonka va rang. Qizil "N narxsiz" o'rniga progress chizig'i — holat bir qarashda ko'rinadi. Kategoriya ichida narx qatorda tahrirlanadi.
+</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph">
+      <div class="ttl">Xizmatlarim</div>
+      <div class="seg"><span class="on">Ishlar</span><span>Materiallar</span></div>
+      <div class="grid2">
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:var(--prs);margin-bottom:10px"><i class="ti ti-stack-2" style="font-size:20px;color:var(--pr)"></i></div>
+          <div class="nm">Shift</div><div class="ct">5 xizmat</div>
+          <div class="bar"><i style="width:60%;background:var(--su)"></i></div>
+          <div style="font-size:10px;margin-top:5px" class="fai">3 / 5 narxlangan</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FEF0C7;margin-bottom:10px"><i class="ti ti-bolt" style="font-size:20px;color:#B45309"></i></div>
+          <div class="nm">Elektrika</div><div class="ct">6 xizmat</div>
+          <div class="bar"><i style="width:17%;background:var(--da)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--da)">1 / 6 narxlangan</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:#E0F2FE;margin-bottom:10px"><i class="ti ti-droplet" style="font-size:20px;color:#0369A1"></i></div>
+          <div class="nm">Santexnika</div><div class="ct">5 xizmat</div>
+          <div class="bar"><i style="width:100%;background:var(--su)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--su)">Narx to'liq</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:var(--acs);margin-bottom:10px"><i class="ti ti-hammer" style="font-size:20px;color:var(--ac)"></i></div>
+          <div class="nm">Demontaj</div><div class="ct">3 xizmat</div>
+          <div class="bar"><i style="width:0%;background:var(--da)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--da)">0 / 3 narxlangan</div>
+        </div>
+      </div>
+      <div class="dash"><i class="ti ti-plus" style="font-size:21px"></i><div style="font-size:14px;font-weight:500;margin-top:4px">Yangi kategoriya</div></div>
+    </div>
+  </div>
+
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph">
+      <div class="ttl">Xizmatlarim</div>
+      <div class="seg"><span class="on">Ishlar</span><span>Materiallar</span></div>
+      <div class="grid2">
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:var(--prs);margin-bottom:10px"><i class="ti ti-stack-2" style="font-size:20px;color:#B49BF5"></i></div>
+          <div class="nm">Shift</div><div class="ct">5 xizmat</div>
+          <div class="bar"><i style="width:60%;background:var(--su)"></i></div>
+          <div style="font-size:10px;margin-top:5px" class="fai">3 / 5 narxlangan</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:#3D3117;margin-bottom:10px"><i class="ti ti-bolt" style="font-size:20px;color:#F0C060"></i></div>
+          <div class="nm">Elektrika</div><div class="ct">6 xizmat</div>
+          <div class="bar"><i style="width:17%;background:var(--da)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--da)">1 / 6 narxlangan</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:#12313D;margin-bottom:10px"><i class="ti ti-droplet" style="font-size:20px;color:#6EC5E8"></i></div>
+          <div class="nm">Santexnika</div><div class="ct">5 xizmat</div>
+          <div class="bar"><i style="width:100%;background:var(--su)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--su)">Narx to'liq</div>
+        </div>
+        <div class="cc">
+          <div class="ico" style="width:38px;height:38px;border-radius:11px;background:var(--acs);margin-bottom:10px"><i class="ti ti-hammer" style="font-size:20px;color:#F0A87E"></i></div>
+          <div class="nm">Demontaj</div><div class="ct">3 xizmat</div>
+          <div class="bar"><i style="width:0%;background:var(--da)"></i></div>
+          <div style="font-size:10px;margin-top:5px;color:var(--da)">0 / 3 narxlangan</div>
+        </div>
+      </div>
+      <div class="dash"><i class="ti ti-plus" style="font-size:21px"></i><div style="font-size:14px;font-weight:500;margin-top:4px">Yangi kategoriya</div></div>
+    </div>
+  </div>
+
+  <div class="col L">
+    <div class="cap">KATEGORIYA ICHI</div>
+    <div class="ph">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="ico" style="width:36px;height:36px;border-radius:11px;background:#FEF0C7"><i class="ti ti-bolt" style="font-size:19px;color:#B45309"></i></div>
+        <div><div style="font-size:17px;font-weight:500">Elektrika</div><div style="font-size:11px" class="fai">6 xizmat · 5 narxsiz</div></div>
+      </div>
+      <div class="card" style="padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:9px;border-color:var(--pr)">
+        <i class="ti ti-wand" style="font-size:17px;color:var(--pr)"></i>
+        <span style="font-size:13px;font-weight:500;color:var(--pr)">Barcha narxlarni to'ldirish</span>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 13px">
+          <div><div style="font-size:13px">Tochka</div><div style="font-size:11px" class="fai">tochka</div></div>
+          <div class="num" style="font-size:14px;font-weight:500">60 000</div>
+        </div>
+        <div class="sep" style="margin-left:13px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 13px;background:var(--prs)">
+          <div><div style="font-size:13px">Shtroba ochish</div><div style="font-size:11px" class="fai">metr</div></div>
+          <div class="num" style="font-size:14px;font-weight:500;color:var(--pr);border-bottom:2px solid var(--pr);padding-bottom:1px">15 000|</div>
+        </div>
+        <div class="sep" style="margin-left:13px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 13px">
+          <div><div style="font-size:13px">Sim tortish</div><div style="font-size:11px" class="fai">metr</div></div>
+          <div style="font-size:13px;color:var(--da)">narx yo'q</div>
+        </div>
+        <div class="sep" style="margin-left:13px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 13px">
+          <div><div style="font-size:13px">Karobka bog'lash</div><div style="font-size:11px" class="fai">dona</div></div>
+          <div style="font-size:13px;color:var(--da)">narx yo'q</div>
+        </div>
+        <div class="sep" style="margin-left:0"></div>
+        <div class="lr"><i class="ti ti-plus" style="font-size:16px;color:var(--mu)"></i><span style="font-size:13px" class="mut">Yangi xizmat</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 6. PROFIL ==================== -->
+<h2>6. Profil — kafel naqshi</h2>
+<div class="note">
+Naqsh <b>faqat shu ekranda</b>. Statistika gradient kartaning pastki qatoriga birikkan. Ro'yxat qatorlari boshqa ekranlar bilan bir xil uslubda.
+</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<pattern id="tile" width="17" height="17" patternUnits="userSpaceOnUse"><path d="M17 0 L0 0 L0 17" fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="0.9"/></pattern>
+</defs></svg>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph">
+      <div class="ttl">Profil</div>
+      <div style="border-radius:18px;overflow:hidden;margin-bottom:14px">
+        <div style="background:linear-gradient(150deg,var(--g1),var(--g2) 130%);padding:22px 16px 18px;text-align:center;position:relative">
+          <svg style="position:absolute;inset:0;width:100%;height:100%"><rect width="100%" height="100%" fill="url(#tile)"/></svg>
+          <div style="position:relative">
+            <div style="width:84px;height:84px;border-radius:50%;margin:0 auto 10px;padding:3px;background:rgba(255,255,255,.3)">
+              <div style="width:100%;height:100%;border-radius:50%;background:#DCE7FD;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;color:#2563EB">S</div>
+            </div>
+            <div style="font-size:20px;font-weight:600;color:#fff">Shahriyor</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.85)">+998 91 660 01 06</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 13px">
+              <i class="ti ti-pencil" style="font-size:13px;color:#fff"></i><span style="font-size:12px;color:#fff">Tahrirlash</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex">
+          <div style="flex:1;padding:11px;text-align:center;background:#2E68ED"><span style="font-size:17px;font-weight:600;color:#fff">3</span><span style="font-size:11px;color:rgba(255,255,255,.82);margin-left:5px">faol obyekt</span></div>
+          <div style="width:.5px;background:rgba(255,255,255,.25)"></div>
+          <div style="flex:1;padding:11px;text-align:center;background:#3A72EE"><span style="font-size:17px;font-weight:600;color:#fff">12</span><span style="font-size:11px;color:rgba(255,255,255,.82);margin-left:5px">tugatilgan</span></div>
+        </div>
+      </div>
+      <div class="sec"><span>MENING SAHIFALARIM</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div class="card" style="flex:1;padding:11px;display:flex;align-items:center;gap:9px">
+          <div class="ico" style="width:30px;height:30px;background:#FCE7F3"><i class="ti ti-brand-instagram" style="font-size:17px;color:#BE185D"></i></div>
+          <span style="font-size:13px">Instagram</span>
+        </div>
+        <div style="width:46px;border:1.5px dashed var(--bd);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="ti ti-plus" style="font-size:17px;color:var(--pr)"></i></div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="lr" style="padding:13px 14px">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--prs)"><i class="ti ti-tag" style="font-size:18px;color:var(--pr)"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Xizmatlarim</div><div style="font-size:11px" class="fai">28 pozitsiya · 6 narxsiz</div></div>
+          <i class="ti ti-chevron-right" style="font-size:17px;color:var(--bd)"></i>
+        </div>
+        <div class="sep" style="margin-left:60px"></div>
+        <div class="lr" style="padding:13px 14px">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:#FEF0C7"><i class="ti ti-notes" style="font-size:18px;color:#B45309"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Qaydlarim</div><div style="font-size:11px" class="fai">2 ta ro'yxat</div></div>
+          <i class="ti ti-chevron-right" style="font-size:17px;color:var(--bd)"></i>
+        </div>
+        <div class="sep" style="margin-left:60px"></div>
+        <div class="lr" style="padding:13px 14px;opacity:.5">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--sf2)"><i class="ti ti-users" style="font-size:18px;color:var(--mu)"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Brigada</div></div>
+          <span class="chip">Tez orada</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph">
+      <div class="ttl">Profil</div>
+      <div style="border-radius:18px;overflow:hidden;margin-bottom:14px">
+        <div style="background:linear-gradient(150deg,var(--g1),var(--g2) 130%);padding:22px 16px 18px;text-align:center;position:relative">
+          <svg style="position:absolute;inset:0;width:100%;height:100%"><rect width="100%" height="100%" fill="url(#tile)"/></svg>
+          <div style="position:relative">
+            <div style="width:84px;height:84px;border-radius:50%;margin:0 auto 10px;padding:3px;background:rgba(255,255,255,.3)">
+              <div style="width:100%;height:100%;border-radius:50%;background:#2A1F4A;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;color:#C4B0F8">S</div>
+            </div>
+            <div style="font-size:20px;font-weight:600;color:#fff">Shahriyor</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.85)">+998 91 660 01 06</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 13px">
+              <i class="ti ti-pencil" style="font-size:13px;color:#fff"></i><span style="font-size:12px;color:#fff">Tahrirlash</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex">
+          <div style="flex:1;padding:11px;text-align:center;background:#8250E8"><span style="font-size:17px;font-weight:600;color:#fff">3</span><span style="font-size:11px;color:rgba(255,255,255,.82);margin-left:5px">faol obyekt</span></div>
+          <div style="width:.5px;background:rgba(255,255,255,.25)"></div>
+          <div style="flex:1;padding:11px;text-align:center;background:#9668EE"><span style="font-size:17px;font-weight:600;color:#fff">12</span><span style="font-size:11px;color:rgba(255,255,255,.82);margin-left:5px">tugatilgan</span></div>
+        </div>
+      </div>
+      <div class="sec"><span>MENING SAHIFALARIM</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div class="card" style="flex:1;padding:11px;display:flex;align-items:center;gap:9px">
+          <div class="ico" style="width:30px;height:30px;background:#3D1B2E"><i class="ti ti-brand-instagram" style="font-size:17px;color:#F0A0C8"></i></div>
+          <span style="font-size:13px">Instagram</span>
+        </div>
+        <div style="width:46px;border:1.5px dashed var(--bd);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="ti ti-plus" style="font-size:17px;color:var(--pr)"></i></div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="lr" style="padding:13px 14px">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--prs)"><i class="ti ti-tag" style="font-size:18px;color:#B49BF5"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Xizmatlarim</div><div style="font-size:11px" class="fai">28 pozitsiya · 6 narxsiz</div></div>
+          <i class="ti ti-chevron-right" style="font-size:17px;color:var(--bd)"></i>
+        </div>
+        <div class="sep" style="margin-left:60px"></div>
+        <div class="lr" style="padding:13px 14px">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:#3D3117"><i class="ti ti-notes" style="font-size:18px;color:#F0C060"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Qaydlarim</div><div style="font-size:11px" class="fai">2 ta ro'yxat</div></div>
+          <i class="ti ti-chevron-right" style="font-size:17px;color:var(--bd)"></i>
+        </div>
+        <div class="sep" style="margin-left:60px"></div>
+        <div class="lr" style="padding:13px 14px;opacity:.5">
+          <div class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--sf2)"><i class="ti ti-users" style="font-size:18px;color:var(--mu)"></i></div>
+          <div style="flex:1"><div style="font-size:14px">Brigada</div></div>
+          <span class="chip">Tez orada</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 7. IKONKA TIZIMI ==================== -->
+<h2>7. Kategoriya ikonkalari</h2>
+<div class="note">
+Emoji o'rniga Tabler ikonkalari. Har biriga rang biriktiriladi. Yangi kategoriya yaratganda shu ro'yxatdan tanlanadi, qidiruv bilan.
+</div>
+<div class="row L">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;width:100%;max-width:760px">
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#DCE7FD;margin:0 auto 7px"><i class="ti ti-stack-2" style="font-size:20px;color:#2563EB"></i></div><div style="font-size:11px">Shift</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#E5E7EB;margin:0 auto 7px"><i class="ti ti-wall" style="font-size:20px;color:#4B5563"></i></div><div style="font-size:11px">Devor</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#EDE9FE;margin:0 auto 7px"><i class="ti ti-layout-grid" style="font-size:20px;color:#6D28D9"></i></div><div style="font-size:11px">Pol</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#CFFAFE;margin:0 auto 7px"><i class="ti ti-checkbox" style="font-size:20px;color:#0E7490"></i></div><div style="font-size:11px">Kafel</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FEF0C7;margin:0 auto 7px"><i class="ti ti-bolt" style="font-size:20px;color:#B45309"></i></div><div style="font-size:11px">Elektrika</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#E0F2FE;margin:0 auto 7px"><i class="ti ti-droplet" style="font-size:20px;color:#0369A1"></i></div><div style="font-size:11px">Santexnika</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FBE3DA;margin:0 auto 7px"><i class="ti ti-hammer" style="font-size:20px;color:#8A3512"></i></div><div style="font-size:11px">Demontaj</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#F3F4F6;margin:0 auto 7px"><i class="ti ti-tool" style="font-size:20px;color:#57534E"></i></div><div style="font-size:11px">Umumiy</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FEF3C7;margin:0 auto 7px"><i class="ti ti-bucket" style="font-size:20px;color:#92400E"></i></div><div style="font-size:11px">Aralashma</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FCE7F3;margin:0 auto 7px"><i class="ti ti-brush" style="font-size:20px;color:#BE185D"></i></div><div style="font-size:11px">Bo'yoq</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FEF0C7;margin:0 auto 7px"><i class="ti ti-plug" style="font-size:20px;color:#B45309"></i></div><div style="font-size:11px">Elektr mol</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#DCFCE7;margin:0 auto 7px"><i class="ti ti-window" style="font-size:20px;color:#15803D"></i></div><div style="font-size:11px">Deraza</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FEE2E2;margin:0 auto 7px"><i class="ti ti-door" style="font-size:20px;color:#B91C1C"></i></div><div style="font-size:11px">Eshik</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#E0E7FF;margin:0 auto 7px"><i class="ti ti-stairs" style="font-size:20px;color:#4338CA"></i></div><div style="font-size:11px">Zina</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#F1F5F9;margin:0 auto 7px"><i class="ti ti-ruler-2" style="font-size:20px;color:#475569"></i></div><div style="font-size:11px">O'lchov</div></div>
+    <div class="cc" style="text-align:center;padding:12px 6px"><div class="ico" style="width:38px;height:38px;border-radius:11px;background:#FFEDD5;margin:0 auto 7px"><i class="ti ti-package" style="font-size:20px;color:#C2410C"></i></div><div style="font-size:11px">Boshqa</div></div>
+  </div>
+</div>
+
+<!-- ==================== 8. RANG XARITASI ==================== -->
+<h2>8. Rang xaritasi</h2>
+<div class="note">Har bir yozuv turi o'z rangiga ega. Chegara, ikonka foni va summa rangi bir oiladan.</div>
+<div class="row">
+  <div class="col L">
+    <div class="cap">KUNDUZGI</div>
+    <div class="ph">
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <tr><td style="padding:7px 0">Ish</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#DCE7FD;border:1px solid #C3D6FA"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#2563EB;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Material</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#FBE3DA;border:1px solid #F0D2C2"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#BC4800;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Xarajat</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#FBE0DC;border:1px solid #F0CFC9"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#C0392B;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Mijoz to'lovi</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#EAF7F0;border:1px solid #A8D9C0"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#0B5C3E;vertical-align:top"></span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col D">
+    <div class="cap">TUNGI</div>
+    <div class="ph">
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <tr><td style="padding:7px 0">Ish</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#2A1F4A;border:1px solid #403268"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#8B5CF6;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Material</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#3A2418;border:1px solid #55351F"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#E2703A;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Xarajat</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#3A1D1A;border:1px solid #552B26"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#E5564A;vertical-align:top"></span></td></tr>
+        <tr><td style="padding:7px 0">Mijoz to'lovi</td><td style="text-align:right"><span style="display:inline-block;width:44px;height:16px;border-radius:4px;background:#12291F;border:1px solid #2C5C45"></span> <span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:#6FE0B0;vertical-align:top"></span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

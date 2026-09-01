@@ -1,31 +1,36 @@
 import {
+  IconBell,
+  IconCash,
   IconChevronRight,
   IconFileText,
   IconPackage,
-  IconPlus,
+  IconReceipt,
   IconSelector,
+  IconTool,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import type { Entry, EntryKind } from '../api/entries'
+import { useNavigate } from 'react-router-dom'
 import { reportPdfUrl } from '../api/report'
 import { AddPaymentSheet } from '../components/AddPaymentSheet'
 import { BottomSheet } from '../components/BottomSheet'
 import { CountUp } from '../components/CountUp'
-import { EmptyState, Screen } from '../components/Screen'
 import { ProjectPicker } from '../components/ProjectPicker'
+import { RowCard } from '../components/RowCard'
+import { PaymentCard } from '../components/PaymentCard'
+import { EmptyState, Screen } from '../components/Screen'
 import { SplashSkeleton } from '../components/states'
 import { useActiveProject } from '../hooks/activeProjectContext'
-import { useRecentEntries, useSummary } from '../hooks/useEntries'
-import { usePayments } from '../hooks/usePayments'
-import { KIND_AMOUNT, KIND_LABEL, PURPOSE_LABEL } from '../lib/entryVisual'
-import { fmtMoney, fmtQty } from '../lib/format'
+import { useSummary } from '../hooks/useEntries'
+import { useTimeline } from '../hooks/useTimeline'
+import { fmtMoney, fmtNumber, fmtQty } from '../lib/format'
 import { openLink } from '../lib/telegram'
 
 export function Home() {
   const { active, projects, isLoading, setActive } = useActiveProject()
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [payOpen, setPayOpen] = useState(false)
+  const navigate = useNavigate()
   const summary = useSummary(active?.id ?? 0)
 
   if (isLoading) return <SplashSkeleton />
@@ -38,70 +43,53 @@ export function Home() {
   }
 
   const s = summary.data
-  const laborTotal = s ? Number(s.labor.works_total) : 0
-  const spendTotal = s ? Number(s.materials.total_spent) : 0
+  const works = s ? Number(s.labor.works_total) : 0
+  const paid = s ? Number(s.labor.paid) : 0
   const owes = s ? Number(s.labor.remaining) : 0
 
   return (
     <Screen title="Asosiy">
-      <button
-        type="button"
-        onClick={() => projects.length > 1 && setPickerOpen(true)}
-        style={{ background: 'var(--grad)' }}
-        className="w-full rounded-card p-4 text-left text-on-primary shadow-sm active:scale-[0.99]"
-      >
-        <div className="flex items-center gap-1">
-          <span className="truncate text-title">{active.title}</span>
-          {projects.length > 1 && (
-            <IconSelector size={18} className="shrink-0 opacity-80" />
-          )}
-        </div>
-        {active.client_name && (
-          <div className="text-label opacity-80">{active.client_name}</div>
-        )}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div>
-            <div className="text-label opacity-80">Jami ish haqi</div>
-            <CountUp value={laborTotal} className="text-title" />
+      <div className="mb-3.5 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => projects.length > 1 && setPickerOpen(true)}
+          className="text-left"
+        >
+          <div className="text-[11px] text-text-faint">Obyekt</div>
+          <div className="flex items-center gap-1 text-[15px] font-medium text-text">
+            <span className="truncate">{active.title}</span>
+            {projects.length > 1 && (
+              <IconSelector size={14} className="shrink-0 text-text-faint" />
+            )}
           </div>
-          <div>
-            <div className="text-label opacity-80">Jami xarajat</div>
-            <CountUp value={spendTotal} className="text-title" />
-          </div>
-        </div>
-      </button>
-
-      <ReportButton projectId={active.id} />
-
-      <div className="mt-3 rounded-card border border-border bg-surface p-4">
-        <div className="text-label text-text-muted">
-          {owes < 0 ? 'Mijoz avansi' : 'Mijoz qarzi'}
-        </div>
-        <CountUp
-          value={Math.abs(owes)}
-          className="mt-0.5 block text-2xl font-semibold text-text"
-        />
-        <div className="mt-0.5 text-label text-text-faint">
-          Bajarilgan {fmtMoney(laborTotal)} · to‘langan{' '}
-          {fmtMoney(s ? Number(s.labor.paid) : 0)}
-        </div>
+        </button>
+        <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-primary-soft text-primary">
+          <IconBell size={15} />
+        </span>
       </div>
 
-      <Block kind="work" projectId={active.id} title="Bajarilgan ishlar" />
-      <Block
-        kind="material"
-        projectId={active.id}
-        title="Materiallar"
-        total={spendTotal}
-      />
-      <Block
-        kind="expense"
-        projectId={active.id}
-        title="Xarajatlar"
-        hideIfEmpty
+      <Hero owes={owes} works={works} paid={paid} />
+
+      <QuickBar
+        onAdd={(t) => navigate(`/add?type=${t}`)}
+        onPay={() => setPayOpen(true)}
       />
 
-      <PaymentsBlock projectId={active.id} />
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="text-[11px] uppercase tracking-[0.06em] text-text-faint">
+          So‘nggi yozuvlar
+        </h2>
+        <button
+          type="button"
+          onClick={() => navigate('/history')}
+          className="text-[11px] text-primary"
+        >
+          Barchasi
+        </button>
+      </div>
+      <Recent projectId={active.id} />
+
+      <ReportButton projectId={active.id} />
 
       <ProjectPicker
         open={pickerOpen}
@@ -110,80 +98,148 @@ export function Home() {
         activeId={active.id}
         onPick={setActive}
       />
+      <AddPaymentSheet
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
+        projectId={active.id}
+      />
     </Screen>
   )
 }
 
-function Block({
-  kind,
-  projectId,
-  title,
-  hideIfEmpty,
-  total,
+function Hero({
+  owes,
+  works,
+  paid,
 }: {
-  kind: EntryKind
-  projectId: number
-  title: string
-  hideIfEmpty?: boolean
-  /** sarlavha ostida ko'rsatiladigan jami summa */
-  total?: number
+  owes: number
+  works: number
+  paid: number
 }) {
-  const navigate = useNavigate()
-  const { data: recent = [], isLoading } = useRecentEntries(projectId, kind)
+  const advance = owes < 0
+  return (
+    <div
+      className="relative mb-3 overflow-hidden rounded-2xl p-[18px]"
+      style={{ background: 'var(--grad)' }}
+    >
+      <div className="absolute -right-[34px] -top-[34px] h-[126px] w-[126px] rounded-full bg-white/[0.08]" />
+      <div className="relative">
+        <div className="text-[12px] text-white/80">
+          {advance ? 'Mijoz avansi' : 'Mijoz qarzi'}
+        </div>
+        <CountUp
+          value={Math.abs(owes)}
+          className="block text-[34px] font-semibold leading-[1.08] tracking-[-0.02em] text-white [font-variant-numeric:tabular-nums]"
+        />
+        <div className="mt-0.5 text-[12px] text-white/80">so‘m</div>
+        <div className="my-[14px] mb-2.5 h-px bg-white/20" />
+        <div className="flex gap-4 text-[11px] text-white/[0.88]">
+          <span>
+            Ishlar <b className="tabular-nums">{fmtNumber(works)}</b>
+          </span>
+          <span>
+            To‘langan <b className="tabular-nums">{fmtNumber(paid)}</b>
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  if (hideIfEmpty && !isLoading && recent.length === 0) return null
+const QUICK: {
+  type: 'work' | 'material' | 'expense'
+  label: string
+  Icon: typeof IconTool
+  color: string
+}[] = [
+  { type: 'work', label: 'Ish', Icon: IconTool, color: 'text-primary' },
+  { type: 'material', label: 'Material', Icon: IconPackage, color: 'text-accent' },
+  { type: 'expense', label: 'Xarajat', Icon: IconReceipt, color: 'text-danger' },
+]
+
+function QuickBar({
+  onAdd,
+  onPay,
+}: {
+  onAdd: (t: 'work' | 'material' | 'expense') => void
+  onPay: () => void
+}) {
+  return (
+    <div className="mb-4 flex gap-2">
+      {QUICK.map(({ type, label, Icon, color }) => (
+        <button
+          key={type}
+          type="button"
+          onClick={() => onAdd(type)}
+          className="flex-1 rounded-btn border border-border bg-surface px-1 py-2.5 text-center active:scale-[0.97]"
+        >
+          <Icon size={19} className={`mx-auto ${color}`} />
+          <div className="mt-[3px] text-[10px] text-text-muted">{label}</div>
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={onPay}
+        className="flex-1 rounded-btn border border-border bg-surface px-1 py-2.5 text-center active:scale-[0.97]"
+      >
+        <IconCash size={19} className="mx-auto text-success" />
+        <div className="mt-[3px] text-[10px] text-text-muted">To‘lov</div>
+      </button>
+    </div>
+  )
+}
+
+function Recent({ projectId }: { projectId: number }) {
+  const navigate = useNavigate()
+  const q = useTimeline(projectId)
+  const items = (q.data?.pages[0]?.items ?? []).slice(0, 5)
+
+  if (q.isPending) {
+    return (
+      <div className="space-y-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-[58px] animate-pulse rounded-[13px] border border-border bg-surface"
+          />
+        ))}
+      </div>
+    )
+  }
+  if (items.length === 0) {
+    return (
+      <p className="rounded-[13px] border border-border bg-surface px-3 py-4 text-label text-text-faint">
+        Hali yozuv yo‘q — yuqoridagi tugmalardan qo‘shing
+      </p>
+    )
+  }
 
   return (
-    <section className="mt-4">
-      <div className="mb-1.5 flex items-center justify-between">
-        <div>
-          <h2 className="text-label uppercase text-text-muted">{title}</h2>
-          {total != null && (
-            <div className="text-body text-text">
-              Jami sarflangan: {fmtMoney(total)}
-            </div>
-          )}
-        </div>
-        {recent.length > 0 && (
-          <Link
-            to={`/history?kind=${kind}`}
-            className="text-label text-primary"
-          >
-            Barchasi
-          </Link>
-        )}
-      </div>
-
-      <div className="overflow-hidden rounded-card border border-border bg-surface">
-        {recent.length === 0 ? (
-          <p className="px-3 py-3 text-label text-text-faint">
-            Hali qo‘shilmagan
-          </p>
+    <div className="space-y-2">
+      {items.map((it) =>
+        it.type === 'payment' ? (
+          <PaymentCard
+            key={`p${it.id}`}
+            payment={it}
+            onOpen={() => navigate('/history?kind=payment')}
+          />
         ) : (
-          recent.map((e: Entry) => (
-            <div
-              key={e.id}
-              className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2 last:border-b-0"
-            >
-              <span className="truncate text-body text-text">{e.name}</span>
-              <span className={`shrink-0 text-body ${KIND_AMOUNT[kind]}`}>
-                {kind === 'expense'
-                  ? fmtMoney(e.amount)
-                  : `${fmtQty(e.quantity, e.unit_label ?? e.unit)} · ${fmtMoney(e.amount)}`}
-              </span>
-            </div>
-          ))
-        )}
-        <button
-          type="button"
-          onClick={() => navigate(`/add?type=${kind}`)}
-          className="flex w-full items-center justify-center gap-1 border-t border-dashed border-border py-2.5 text-label text-primary active:bg-surface-2"
-        >
-          + {KIND_LABEL[kind]} qo‘shish
-          <IconChevronRight size={14} />
-        </button>
-      </div>
-    </section>
+          <RowCard
+            key={`e${it.id}`}
+            type={it.kind}
+            title={it.name}
+            sub={
+              it.kind !== 'expense'
+                ? `${fmtQty(it.quantity, it.unit_label ?? it.unit)} × ${fmtMoney(it.unit_price)}`
+                : undefined
+            }
+            amount={fmtMoney(it.amount)}
+            amountStrike={it.is_rework}
+            onClick={() => navigate(`/history?kind=${it.kind}`)}
+          />
+        ),
+      )}
+    </div>
   )
 }
 
@@ -200,16 +256,12 @@ function ReportButton({ projectId }: { projectId: number }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-card border border-border bg-surface py-2.5 text-label text-primary active:scale-[0.99]"
+        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[13px] border border-border bg-surface py-2.5 text-label text-primary active:scale-[0.99]"
       >
         <IconFileText size={16} /> Hisobot (PDF)
       </button>
 
-      <BottomSheet
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Hisobot (PDF)"
-      >
+      <BottomSheet open={open} onClose={() => setOpen(false)} title="Hisobot (PDF)">
         <div className="space-y-3">
           <p className="text-label text-text-muted">
             Sana oralig‘ini tanlamasangiz — butun davr bo‘yicha.
@@ -252,7 +304,7 @@ function ReportButton({ projectId }: { projectId: number }) {
           <ReportOption
             icon={<IconPackage size={20} />}
             title="Material va xarajatlar"
-            hint="Materiallar, xarajatlar va qoldiq"
+            hint="Materiallar, xarajatlar va jami"
             onClick={() => {
               openLink(
                 reportPdfUrl(projectId, 'materials', {
@@ -295,61 +347,3 @@ function ReportOption({
     </button>
   )
 }
-
-function PaymentsBlock({ projectId }: { projectId: number }) {
-  const { data: payments = [] } = usePayments(projectId)
-  const [addOpen, setAddOpen] = useState(false)
-  const recent = payments.slice(0, 3)
-
-  return (
-    <section className="mt-4">
-      <div className="mb-1.5 flex items-center justify-between">
-        <h2 className="text-label uppercase text-text-muted">
-          Mijoz to‘lovlari
-        </h2>
-        {payments.length > 0 && (
-          <Link to="/history?kind=payment" className="text-label text-primary">
-            Barchasi
-          </Link>
-        )}
-      </div>
-
-      <div className="overflow-hidden rounded-card border border-border bg-surface">
-        {recent.length === 0 ? (
-          <p className="px-3 py-3 text-label text-text-faint">
-            Hali to‘lov yo‘q
-          </p>
-        ) : (
-          recent.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2 last:border-b-0"
-            >
-              <span className="truncate text-label text-text-muted">
-                {PURPOSE_LABEL[p.purpose]}
-              </span>
-              <span className="shrink-0 text-body text-success">
-                + {fmtMoney(p.amount)}
-              </span>
-            </div>
-          ))
-        )}
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          className="flex w-full items-center justify-center gap-1 border-t border-dashed border-border py-2.5 text-label text-primary active:bg-surface-2"
-        >
-          + To‘lov qo‘shish
-          <IconPlus size={14} />
-        </button>
-      </div>
-
-      <AddPaymentSheet
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        projectId={projectId}
-      />
-    </section>
-  )
-}
-

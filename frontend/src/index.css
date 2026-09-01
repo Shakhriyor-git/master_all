@@ -21,8 +21,17 @@
   --danger: #c0392b;
   --danger-soft: #fbe0dc;
   --border: #e2e6ec;
+  /* Yozuv kartasi chegaralari — tur bo'yicha (maket 8-bo'lim) */
+  --border-work: #c3d6fa;
+  --border-material: #f0d2c2;
+  --border-expense: #f0cfc9;
+  --border-payment: #a8d9c0;
+  --bg-payment: #eaf7f0;
   /* Gradient — FAQAT asosiy obyekt kartasi va profil sarlavhasida */
-  --grad: linear-gradient(135deg, #2563eb, #4f8af5);
+  --grad: linear-gradient(150deg, #2563eb, #5b8def 130%);
+  --grad-stat-a: #2e68ed;
+  --grad-stat-b: #3a72ee;
+  --fab-glow: rgba(37, 99, 235, 0.35);
 }
 
 :root[data-theme='dark'] {
@@ -42,7 +51,15 @@
   --danger: #e5564a;
   --danger-soft: #3a1d1a;
   --border: #2a2a38;
-  --grad: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  --border-work: #403268;
+  --border-material: #55351f;
+  --border-expense: #552b26;
+  --border-payment: #2c5c45;
+  --bg-payment: #12291f;
+  --grad: linear-gradient(150deg, #7c3aed, #a78bfa 130%);
+  --grad-stat-a: #8250e8;
+  --grad-stat-b: #9668ee;
+  --fab-glow: rgba(139, 92, 246, 0.4);
 }
 
 @media (prefers-reduced-motion: reduce) {

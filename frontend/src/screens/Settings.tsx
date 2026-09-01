@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Screen } from '../components/Screen'
 import { Segment } from '../components/Segment'
@@ -28,11 +27,9 @@ export function Settings() {
           value="uz"
           onChange={() => {}}
         />
-        <p className="mt-1 text-label text-text-faint">Rus tili keyin qo‘shiladi.</p>
-      </Row>
-
-      <Row label="Bildirishnomalar">
-        <Toggle />
+        <p className="mt-1 text-label text-text-faint">
+          Rus tili keyin qo‘shiladi.
+        </p>
       </Row>
 
       <p className="mt-6 text-center text-label text-text-faint">
@@ -42,41 +39,11 @@ export function Settings() {
   )
 }
 
-function Row({
-  label,
-  children,
-}: {
-  label: string
-  children: ReactNode
-}) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="mt-3 rounded-card border border-border bg-surface p-4">
       <div className="mb-2 text-label text-text-muted">{label}</div>
       {children}
     </div>
-  )
-}
-
-function Toggle() {
-  const [on, setOn] = useState(true)
-  return (
-    <button
-      type="button"
-      onClick={() => setOn((v) => !v)}
-      className={
-        on
-          ? 'h-7 w-12 rounded-chip bg-primary p-1 transition-colors'
-          : 'h-7 w-12 rounded-chip bg-surface-2 p-1 transition-colors'
-      }
-      aria-pressed={on}
-    >
-      <span
-        className={
-          on
-            ? 'block h-5 w-5 translate-x-5 rounded-full bg-on-primary transition-transform'
-            : 'block h-5 w-5 rounded-full bg-text-faint transition-transform'
-        }
-      />
-    </button>
   )
 }

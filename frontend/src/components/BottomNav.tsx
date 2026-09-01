@@ -10,7 +10,6 @@ import {
   IconUserFilled,
   type Icon,
 } from '@tabler/icons-react'
-import { motion } from 'framer-motion'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { hapticSuccess } from '../lib/telegram'
 
@@ -38,33 +37,31 @@ const TABS: TabDef[] = [
   },
 ]
 
-// Ikonka o'lchami HAR DOIM bir xil — faqat rang/to'ldirilish o'zgaradi.
-const ICON_SIZE = 24
-const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+// Ikonka o'lchami HAR DOIM bir xil — faqat rang o'zgaradi. Hech qanday
+// scale / translate / spring animatsiya yo'q (panel sakramasligi uchun).
+const ICON_SIZE = 23
 
 export function BottomNav() {
   const navigate = useNavigate()
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-md grid-cols-5 px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto flex h-[62px] max-w-md items-end justify-around px-1">
         {TABS.slice(0, 2).map((t) => (
           <Tab key={t.to} {...t} />
         ))}
 
-        <div className="flex h-14 items-center justify-center">
-          <button
-            type="button"
-            aria-label="Tez qo‘shish"
-            onClick={() => {
-              hapticSuccess()
-              navigate('/add')
-            }}
-            className="-mt-6 flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary text-on-primary shadow-md active:scale-95"
-          >
-            <IconPlus size={26} />
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label="Tez qo‘shish"
+          onClick={() => {
+            hapticSuccess()
+            navigate('/add')
+          }}
+          className="mx-1 flex h-[52px] w-[52px] flex-none -translate-y-[14px] items-center justify-center rounded-full bg-primary text-on-primary shadow-[0_4px_14px_var(--fab-glow)] transition-transform duration-100 active:scale-[0.94]"
+        >
+          <IconPlus size={26} />
+        </button>
 
         {TABS.slice(2).map((t) => (
           <Tab key={t.to} {...t} />
@@ -79,37 +76,21 @@ function Tab({ to, label, Icon, IconActive }: TabDef) {
     <NavLink
       to={to}
       end={to === '/'}
-      // Balandlik QAT'IY — panel hech qachon sakramaydi
-      className="relative flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5"
+      className="flex flex-1 flex-col items-center gap-0.5 pb-[9px] pt-1"
     >
       {({ isActive }) => (
-        <>
-          {isActive && (
-            <motion.span
-              layoutId="nav-indicator"
-              transition={SPRING}
-              className="absolute top-0 h-0.5 w-7 rounded-full bg-primary"
-            />
+        <span
+          className={`flex flex-col items-center gap-0.5 transition-colors duration-150 ${
+            isActive ? 'text-primary' : 'text-text-faint'
+          }`}
+        >
+          {isActive ? (
+            <IconActive size={ICON_SIZE} />
+          ) : (
+            <Icon size={ICON_SIZE} />
           )}
-          <span
-            className={`transition-colors duration-150 ${
-              isActive ? 'text-primary' : 'text-text-faint'
-            }`}
-          >
-            {isActive ? (
-              <IconActive size={ICON_SIZE} />
-            ) : (
-              <Icon size={ICON_SIZE} />
-            )}
-          </span>
-          <span
-            className={`text-label leading-none transition-colors duration-150 ${
-              isActive ? 'text-primary' : 'text-text-faint'
-            }`}
-          >
-            {label}
-          </span>
-        </>
+          <span className="text-[10px] font-medium leading-none">{label}</span>
+        </span>
       )}
     </NavLink>
   )

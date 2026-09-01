@@ -41,31 +41,31 @@ HIDDEN_PICKER_UNITS = frozenset({"summa"})
 _CategoryDef = tuple[str, str, list[tuple[str, str]]]
 
 WORK_CATEGORIES: list[_CategoryDef] = [
-    ("🏠", "Shift", [
+    ("stack-2", "Shift", [
         ("Gipsokarton yopishtirish", "m2"),
         ("Gulli gipsokarton", "m2"),
         ("Shift shpatlyovka", "m2"),
         ("Shift emulsiya", "m2"),
         ("Natyajnoy potolok", "m2"),
     ]),
-    ("🧱", "Devor", [
+    ("wall", "Devor", [
         ("Shtukaturka", "m2"),
         ("Shpatlyovka", "m2"),
         ("Bo'yash", "m2"),
         ("Oboy yopishtirish", "m2"),
         ("Dekorativ pardoz", "m2"),
     ]),
-    ("⬜", "Pol", [
+    ("layout-grid", "Pol", [
         ("Quyma pol (styajka)", "m2"),
         ("Laminat yotqizish", "m2"),
         ("Plintus o'rnatish", "metr"),
     ]),
-    ("◻️", "Kafel", [
+    ("checkbox", "Kafel", [
         ("Devorga kafel", "m2"),
         ("Polga kafel", "m2"),
         ("Zatirka", "m2"),
     ]),
-    ("⚡", "Elektrika", [
+    ("bolt", "Elektrika", [
         ("Tochka (rozetka/vklyuchatel)", "tochka"),
         ("Shtroba ochish", "metr"),
         ("Sim tortish", "metr"),
@@ -73,51 +73,51 @@ WORK_CATEGORIES: list[_CategoryDef] = [
         ("Lyustra o'rnatish", "dona"),
         ("Shitok yig'ish", "dona"),
     ]),
-    ("🚿", "Santexnika", [
+    ("droplet", "Santexnika", [
         ("Unitaz o'rnatish", "dona"),
         ("Rakovina o'rnatish", "dona"),
         ("Dush kabina", "dona"),
         ("Quvur tortish", "metr"),
         ("Radiator o'rnatish", "dona"),
     ]),
-    ("🔨", "Demontaj", [
+    ("hammer", "Demontaj", [
         ("Devor buzish", "m2"),
         ("Eski kafel ko'chirish", "m2"),
         ("Chiqindi chiqarish", "kunlik"),
     ]),
-    ("📋", "Umumiy", [
+    ("tool", "Umumiy", [
         ("Kunlik ish", "kunlik"),
         ("Yordamchi ishchi", "kunlik"),
     ]),
 ]
 
 MATERIAL_CATEGORIES: list[_CategoryDef] = [
-    ("🪣", "Aralashmalar", [
+    ("bucket", "Aralashmalar", [
         ("Sement", "qop"),
         ("Gips", "qop"),
         ("Shpatlyovka", "qop"),
         ("Grunt", "litr"),
         ("Qum", "m3"),
     ]),
-    ("◻️", "Kafel mollari", [
+    ("checkbox", "Kafel mollari", [
         ("Kafel", "m2"),
         ("Yopishtiruvchi", "qop"),
         ("Zatirka", "kg"),
         ("Krestik", "komplekt"),
     ]),
-    ("⚡", "Elektr mollari", [
+    ("plug", "Elektr mollari", [
         ("Sim", "metr"),
         ("Rozetka", "dona"),
         ("Vklyuchatel", "dona"),
         ("Karobka", "dona"),
         ("Avtomat", "dona"),
     ]),
-    ("🚿", "Santexnika mollari", [
+    ("droplet", "Santexnika mollari", [
         ("Quvur", "metr"),
         ("Kran", "dona"),
         ("Fitting", "dona"),
     ]),
-    ("🎨", "Bo'yoq", [
+    ("brush", "Bo'yoq", [
         ("Emulsiya", "litr"),
         ("Bo'yoq", "litr"),
         ("Valik", "dona"),

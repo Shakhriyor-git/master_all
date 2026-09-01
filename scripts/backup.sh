@@ -37,7 +37,8 @@ docker compose -f docker-compose.prod.yml exec -T db \
 STATUS=$?
 set -e
 
-SIZE=$(wc -c < "$OUT" 2>/dev/null || echo 0)
+# Hajm — BAYT aniqligida (bloklarda emas: 20 baytlik bo'sh gz o'tib ketmasin)
+SIZE=$(stat -c%s "$OUT" 2>/dev/null || wc -c < "$OUT" 2>/dev/null || echo 0)
 
 if (( STATUS != 0 )) || (( SIZE < 1024 )); then
   echo "XATO: backup muvaffaqiyatsiz (pg_dump status=$STATUS, hajm=${SIZE} bayt)." >&2

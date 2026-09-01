@@ -20,18 +20,38 @@ export const KIND_ICON: Record<EntryKind, typeof IconTool> = {
   expense: IconReceipt,
 }
 
-/** ikon foni */
-export const KIND_ICON_BG: Record<EntryKind, string> = {
-  work: 'bg-primary-soft text-primary',
-  material: 'bg-accent-soft text-accent',
-  expense: 'bg-surface-2 text-text-muted',
+/** Yozuv/to'lov kartasi turi — bitta joyda markazlashtirilgan xaritalash. */
+export type RowType = EntryKind | 'payment'
+
+/** Karta chegarasi + foni (maket 8-bo'lim "Rang xaritasi"). */
+export const ROW_EDGE: Record<RowType, string> = {
+  work: 'border-[color:var(--border-work)] bg-surface',
+  material: 'border-[color:var(--border-material)] bg-surface',
+  expense: 'border-[color:var(--border-expense)] bg-surface',
+  payment: 'border-[color:var(--border-payment)] bg-[var(--bg-payment)]',
 }
 
-/** summa rangi */
-export const KIND_AMOUNT: Record<EntryKind, string> = {
+export const ROW_ICON: Record<RowType, typeof IconTool> = {
+  work: IconTool,
+  material: IconPackage,
+  expense: IconReceipt,
+  payment: IconCash,
+}
+
+/** Ikon doirasi foni + rangi. */
+export const ROW_ICON_BG: Record<RowType, string> = {
+  work: 'bg-primary-soft text-primary',
+  material: 'bg-accent-soft text-accent',
+  expense: 'bg-danger-soft text-danger',
+  payment: 'bg-success-soft text-success',
+}
+
+/** Summa matni rangi. */
+export const ROW_AMOUNT: Record<RowType, string> = {
   work: 'text-primary',
   material: 'text-accent',
-  expense: 'text-text-muted',
+  expense: 'text-danger',
+  payment: 'text-success',
 }
 
 export const METHOD_LABEL: Record<PayMethod, string> = {

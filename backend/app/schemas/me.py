@@ -30,6 +30,10 @@ class MeRead(BaseModel):
     social_links: list[SocialLink]
     active_projects: int
     completed_projects: int
+    # Profil ro'yxati izohlari uchun — qo'shimcha so'rovsiz
+    catalog_items: int
+    catalog_unpriced: int
+    notes_count: int
 
 
 class MeUpdate(BaseModel):
