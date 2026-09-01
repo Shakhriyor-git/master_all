@@ -94,6 +94,8 @@ export function EntryFormSheet({
       name: name.trim(),
       unit: isExpense ? 'summa' : unit.trim() || 'summa',
       unit_price: unitPrice,
+      // usta kiritgan aniq jami — backend shuni saqlaydi (yaxlatishsiz)
+      amount: total,
       quantity: isExpense ? 1 : (qty ?? 0) > 0 ? (qty as number) : 1,
       entry_date: entryDate,
       note: note.trim() || undefined,
@@ -197,25 +199,15 @@ export function EntryFormSheet({
         )}
 
         {!isWork && (
-          <div className="space-y-2">
-            <Segment
-              options={[
-                { value: 'master', label: 'Men' },
-                { value: 'client', label: 'Mijoz' },
-              ]}
-              value={paidBy}
-              onChange={(v) => setPaidBy(v as PaidBy)}
-            />
-            <Segment
-              options={[
-                { value: 'cash', label: 'Naqd' },
-                { value: 'card', label: 'Karta' },
-                { value: 'transfer', label: 'O‘tkazma' },
-              ]}
-              value={method}
-              onChange={(v) => setMethod(v as PayMethod)}
-            />
-          </div>
+          <Segment
+            options={[
+              { value: 'cash', label: 'Naqd' },
+              { value: 'card', label: 'Karta' },
+              { value: 'transfer', label: 'O‘tkazma' },
+            ]}
+            value={method}
+            onChange={(v) => setMethod(v as PayMethod)}
+          />
         )}
 
         {!isWork && (
@@ -248,6 +240,20 @@ export function EntryFormSheet({
             onChange={(e) => setNote(e.target.value)}
           />
         </label>
+
+        {!isWork && (
+          <label className="flex items-center gap-2 text-label text-text-muted">
+            <input
+              type="checkbox"
+              checked={paidBy === 'client'}
+              onChange={(e) =>
+                setPaidBy(e.target.checked ? 'client' : 'master')
+              }
+              className="h-4 w-4 accent-[var(--primary)]"
+            />
+            Mijoz o‘zi sotib oldi
+          </label>
+        )}
 
         {!isExpense && (
           <label className="flex items-center gap-2 text-label text-text-muted">

@@ -37,14 +37,18 @@ from app.services.summary import build_project_summary
 _STRIP_CHARS = "'`‘’ʻʼ"
 
 
-def report_filename(title: str, on: date) -> str:
-    """'Tarovat 145-uy' -> 'Tarovat-145-uy_2026-08-30.pdf' (translit, xavfsiz)."""
+def report_filename(title: str, on: date, part: str = "") -> str:
+    """'Tarovat 145-uy' + 'ish-haqi' -> 'Tarovat-145-uy_ish-haqi_2026-08-30.pdf'.
+
+    Translit, ASCII-xavfsiz. `part` bo'sh bo'lsa tushirib qoldiriladi.
+    """
     text = "".join("" if ch in _STRIP_CHARS else ch for ch in title)
     text = unicodedata.normalize("NFKD", text)
     text = text.encode("ascii", "ignore").decode("ascii")
     out = [ch if ch.isalnum() else "-" if ch in " -_" else "" for ch in text]
     slug = "-".join(filter(None, "".join(out).split("-"))) or "hisobot"
-    return f"{slug}_{on.isoformat()}.pdf"
+    mid = f"_{part}" if part else ""
+    return f"{slug}{mid}_{on.isoformat()}.pdf"
 
 
 async def gather_report_data(
@@ -75,6 +79,7 @@ async def gather_report_data(
     works: list[WorkRow] = []
     materials_master: list[MaterialRow] = []
     materials_client: list[MaterialRow] = []
+    expenses_master: list[ExpenseRow] = []
     expenses_client: list[ExpenseRow] = []
 
     for entry, cat_name, unit_label in (await db.execute(stmt)).all():
@@ -89,6 +94,7 @@ async def gather_report_data(
                 unit_price=entry.unit_price,
                 amount=entry.amount,
                 is_rework=entry.is_rework,
+                note=entry.note,
             ))
         elif entry.kind == "material":
             row = MaterialRow(
@@ -99,19 +105,25 @@ async def gather_report_data(
                 unit_price=entry.unit_price,
                 amount=entry.amount,
                 method=entry.payment_method,
+                vendor=entry.vendor,
+                note=entry.note,
             )
             if entry.paid_by == "client":
                 materials_client.append(row)
             else:
                 materials_master.append(row)
-        elif entry.kind == "expense" and entry.paid_by == "client":
-            # ustaning shaxsiy xarajati hujjatga kirmaydi
-            expenses_client.append(ExpenseRow(
+        elif entry.kind == "expense":
+            row = ExpenseRow(
                 day=entry.entry_date,
                 name=entry.name,
                 amount=entry.amount,
                 method=entry.payment_method,
-            ))
+                note=entry.note,
+            )
+            if entry.paid_by == "client":
+                expenses_client.append(row)
+            else:
+                expenses_master.append(row)
 
     pay_stmt = select(Payment).where(
         Payment.project_id == project.id,
@@ -146,6 +158,7 @@ async def gather_report_data(
         works=works,
         materials_master=materials_master,
         materials_client=materials_client,
+        expenses_master=expenses_master,
         expenses_client=expenses_client,
         payments=payments,
         works_total=summary.labor.works_total,

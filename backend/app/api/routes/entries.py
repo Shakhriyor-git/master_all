@@ -239,6 +239,9 @@ async def create_entry(
         unit=unit,
         quantity=quantity,
         unit_price=unit_price,
+        # aniq jami summa berilsa — o'shani saqlaymiz (yaxlatish drift'isiz),
+        # aks holda listener quantity * unit_price ni yozadi
+        amount=payload.amount,
         paid_by=payload.paid_by,
         is_rework=payload.is_rework,
         payment_method=payload.payment_method,
@@ -325,10 +328,17 @@ async def update_entry(
     entry_id: int, payload: EntryUpdate, user: CurrentUser, db: DbSession
 ):
     entry = await _owned_entry(entry_id, user, db)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    fields = payload.model_dump(exclude_unset=True)
+    for field, value in fields.items():
         setattr(entry, field, value)
+    # amount aniq berilmagan bo'lsa, lekin miqdor yoki narx o'zgargan bo'lsa —
+    # qayta hisoblaymiz
+    if "amount" not in fields and ("quantity" in fields or "unit_price" in fields):
+        entry.amount = (
+            Decimal(entry.quantity) * Decimal(entry.unit_price)
+        ).quantize(Decimal("0.01"))
     await db.commit()
-    await db.refresh(entry)  # amount (generated) qayta hisoblanadi
+    await db.refresh(entry)
     return entry
 
 

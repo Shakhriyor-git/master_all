@@ -25,6 +25,9 @@ class EntryCreate(BaseModel):
     unit: str | None = Field(default=None, min_length=1, max_length=20)
     unit_price: Decimal | None = Field(default=None, ge=0)
     quantity: Decimal = Field(default=Decimal("1"), gt=0)
+    # Aniq JAMI summa. Berilsa shu saqlanadi (yaxlatish drift'isiz),
+    # aks holda quantity * unit_price hisoblanadi.
+    amount: Decimal | None = Field(default=None, ge=0)
     paid_by: PaidBy = PaidBy.MASTER
     is_rework: bool = False
     payment_method: PaymentMethod | None = None
@@ -41,6 +44,7 @@ class EntryUpdate(BaseModel):
     unit: str | None = Field(default=None, min_length=1, max_length=20)
     quantity: Decimal | None = Field(default=None, gt=0)
     unit_price: Decimal | None = Field(default=None, ge=0)
+    amount: Decimal | None = Field(default=None, ge=0)
     paid_by: PaidBy | None = None
     is_rework: bool | None = None
     is_billable: bool | None = None

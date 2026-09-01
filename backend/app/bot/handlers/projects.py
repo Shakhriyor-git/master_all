@@ -18,7 +18,7 @@ from app.bot.utils import paginate
 from app.bot.views import send_project_card
 from app.models import Project, User
 from app.services.report_data import gather_report_data, report_filename
-from app.services.report_pdf import build_report_pdf
+from app.services.report_pdf import build_labor_pdf, build_materials_pdf
 
 router = Router(name="projects")
 
@@ -133,14 +133,22 @@ async def back_to_list(
     await _show_list(callback, session, user, 1)
 
 
-@router.callback_query(ProjectCb.filter(F.action == "report"))
+_REPORTS = {
+    "report_labor": (build_labor_pdf, "ish-haqi", "ish haqi hisoboti"),
+    "report_materials": (
+        build_materials_pdf, "material", "material va xarajatlar",
+    ),
+}
+
+
+@router.callback_query(ProjectCb.filter(F.action.in_(list(_REPORTS))))
 async def send_report(
     callback: CallbackQuery,
     callback_data: ProjectCb,
     session: AsyncSession,
     user: User,
 ) -> None:
-    """Hisob-kitob PDF'ini fayl sifatida yuboradi (08-soddalashtirishdan istisno)."""
+    """Tanlangan hisobot PDF'ini fayl sifatida yuboradi."""
     project = await repo.get_owned_project(
         session, user.id, callback_data.project_id
     )
@@ -149,13 +157,14 @@ async def send_report(
         return
     await callback.answer("Hisobot tayyorlanmoqda…")
 
+    builder, part, label = _REPORTS[callback_data.action]
     data = await gather_report_data(session, project, user, None, None)
-    pdf = await run_in_threadpool(build_report_pdf, data)
+    pdf = await run_in_threadpool(builder, data)
     document = BufferedInputFile(
-        pdf, filename=report_filename(project.title, data.generated_at)
+        pdf, filename=report_filename(project.title, data.generated_at, part)
     )
     caption = (
-        f"{texts.esc(project.title)} — hisob-kitob\n"
+        f"{texts.esc(project.title)} — {label}\n"
         f"{data.generated_at.strftime('%d.%m.%Y')} holatiga"
     )
     await callback.message.answer_document(document, caption=caption)

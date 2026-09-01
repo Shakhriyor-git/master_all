@@ -27,12 +27,13 @@ from app.services.report_pdf import (  # noqa: E402
     MaterialRow,
     ReportData,
     WorkRow,
-    build_report_pdf_with_pages,
+    build_labor_pdf_with_pages,
+    build_materials_pdf_with_pages,
 )
 
 import scripts.seed as seed_mod  # noqa: E402
 
-OUT = pathlib.Path("/tmp/report_test.pdf")
+OUT_DIR = pathlib.Path("/tmp")
 
 
 async def _seed_project(session) -> tuple[Project, User]:
@@ -96,19 +97,26 @@ def _big_data() -> ReportData:
     )
 
 
+_DOCS = (
+    ("ish-haqi", build_labor_pdf_with_pages),
+    ("material", build_materials_pdf_with_pages),
+)
+
+
 async def main() -> None:
-    # 1) seed (idempotent) + haqiqiy obyekt uchun PDF
+    # 1) seed (idempotent) + haqiqiy obyekt uchun ikkala hujjat
     await seed_mod.main()
     async with SessionLocal() as session:
         project, user = await _seed_project(session)
         data = await gather_report_data(session, project, user, None, None)
 
-    pdf, pages = build_report_pdf_with_pages(data)
-    OUT.write_bytes(pdf)
-    print(f"Fayl:        {OUT}")
-    print(f"Fayl nomi:   {report_filename(project.title, data.generated_at)}")
-    print(f"Hajm:        {len(pdf) / 1024:.1f} KB")
-    print(f"Sahifalar:   {pages}")
+    for part, builder in _DOCS:
+        pdf, pages = builder(data)
+        out = OUT_DIR / f"report_test_{part}.pdf"
+        out.write_bytes(pdf)
+        fname = report_filename(project.title, data.generated_at, part)
+        print(f"{part:9} {out}  ({fname}, {len(pdf) / 1024:.1f} KB, "
+              f"{pages} sahifa)")
 
     # 2) bo'sh obyekt — yiqilmasligi kerak
     empty = ReportData(
@@ -118,16 +126,18 @@ async def main() -> None:
         master_phone=None,
         generated_at=datetime.date(2026, 8, 30),
     )
-    epdf, epages = build_report_pdf_with_pages(empty)
-    print(f"Bo'sh obyekt: {epages} sahifa, {len(epdf)} bayt — OK")
+    for part, builder in _DOCS:
+        epdf, epages = builder(empty)
+        print(f"Bo'sh ({part}): {epages} sahifa, {len(epdf)} bayt — OK")
 
     # 3) 500 yozuvli hisobot — 3 soniyadan tez bo'lsin
-    t0 = time.perf_counter()
-    bpdf, bpages = build_report_pdf_with_pages(_big_data())
-    dt = time.perf_counter() - t0
-    (OUT.parent / "report_test_big.pdf").write_bytes(bpdf)
-    print(f"500 yozuv:    {bpages} sahifa, {dt:.2f}s "
-          f"({'OK' if dt < 3 else 'SEKIN!'})")
+    for part, builder in _DOCS:
+        t0 = time.perf_counter()
+        bpdf, bpages = builder(_big_data())
+        dt = time.perf_counter() - t0
+        (OUT_DIR / f"report_test_big_{part}.pdf").write_bytes(bpdf)
+        print(f"500 yozuv ({part}): {bpages} sahifa, {dt:.2f}s "
+              f"({'OK' if dt < 3 else 'SEKIN!'})")
 
 
 if __name__ == "__main__":

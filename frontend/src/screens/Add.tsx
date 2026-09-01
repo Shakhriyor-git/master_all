@@ -367,14 +367,6 @@ function ServiceFlow({
             <div className="space-y-2">
               <Segment
                 options={[
-                  { value: 'master', label: 'Men' },
-                  { value: 'client', label: 'Mijoz' },
-                ]}
-                value={paidBy}
-                onChange={(v) => setPaidBy(v as 'master' | 'client')}
-              />
-              <Segment
-                options={[
                   { value: 'cash', label: 'Naqd' },
                   { value: 'card', label: 'Karta' },
                   { value: 'transfer', label: 'O‘tkazma' },
@@ -382,6 +374,17 @@ function ServiceFlow({
                 value={method}
                 onChange={(v) => setMethod(v as PayMethod)}
               />
+              <label className="flex items-center gap-2 text-label text-text-muted">
+                <input
+                  type="checkbox"
+                  checked={paidBy === 'client'}
+                  onChange={(e) =>
+                    setPaidBy(e.target.checked ? 'client' : 'master')
+                  }
+                  className="h-4 w-4 accent-[var(--primary)]"
+                />
+                Mijoz o‘zi sotib oldi
+              </label>
               {paidBy === 'client' && (
                 <BudgetHint projectId={projectId} spend={total} />
               )}
@@ -489,14 +492,6 @@ function ExpenseFlow({
 
         <Segment
           options={[
-            { value: 'master', label: 'Men' },
-            { value: 'client', label: 'Mijoz' },
-          ]}
-          value={paidBy}
-          onChange={(v) => setPaidBy(v as 'master' | 'client')}
-        />
-        <Segment
-          options={[
             { value: 'cash', label: 'Naqd' },
             { value: 'card', label: 'Karta' },
             { value: 'transfer', label: 'O‘tkazma' },
@@ -504,6 +499,17 @@ function ExpenseFlow({
           value={method}
           onChange={(v) => setMethod(v as PayMethod)}
         />
+        <label className="flex items-center gap-2 text-label text-text-muted">
+          <input
+            type="checkbox"
+            checked={paidBy === 'client'}
+            onChange={(e) =>
+              setPaidBy(e.target.checked ? 'client' : 'master')
+            }
+            className="h-4 w-4 accent-[var(--primary)]"
+          />
+          Mijoz o‘zi sotib oldi
+        </label>
         {paidBy === 'client' && (
           <BudgetHint projectId={projectId} spend={amount ?? 0} />
         )}

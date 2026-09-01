@@ -71,6 +71,8 @@ export interface CreateEntryBody {
   name?: string
   unit?: string
   unit_price?: number | string
+  /** Aniq JAMI summa — yaxlatish drift'isiz saqlanadi */
+  amount?: number | string
   quantity?: number | string
   paid_by?: PaidBy
   is_rework?: boolean

@@ -10,7 +10,6 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
-    Computed,
     Date,
     ForeignKey,
     Index,
@@ -44,6 +43,7 @@ class Entry(TimestampMixin, SoftDeleteMixin, Base):
         CheckConstraint(
             "unit_price >= 0", name="ck_entries_unit_price_non_negative"
         ),
+        CheckConstraint("amount >= 0", name="ck_entries_amount_non_negative"),
         # Pul bilan bog'liq qoidalar — bazada ham turadi (listener yetarli emas:
         # bulk update da ishlamaydi, refaktorda yo'qolishi mumkin).
         CheckConstraint(
@@ -84,10 +84,10 @@ class Entry(TimestampMixin, SoftDeleteMixin, Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
-    amount: Mapped[Decimal] = mapped_column(
-        Numeric(14, 2),
-        Computed("quantity * unit_price", persisted=True),
-    )
+    # Odatda quantity * unit_price, LEKIN usta jami summani aniq kiritsa
+    # (masalan "3 qop 100 000") — o'sha aniq qiymat saqlanadi, yaxlatish
+    # drift'isiz. Listener bo'sh bo'lsa hisoblab qo'yadi.
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     # master / client — material va expense uchun ma'noli
     paid_by: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="master"
@@ -150,3 +150,9 @@ def _enforce_entry_rules(
     if target.kind == EntryKind.WORK:
         target.payment_method = None
         target.vendor = None
+    # amount berilmagan bo'lsa — quantity * unit_price. Berilgan bo'lsa
+    # (usta aniq jami summani kiritdi) tegmaymiz.
+    if getattr(target, "amount", None) is None:
+        qty = target.quantity or Decimal(0)
+        price = target.unit_price or Decimal(0)
+        target.amount = (Decimal(qty) * Decimal(price)).quantize(Decimal("0.01"))

@@ -1,10 +1,12 @@
 import {
   IconChevronRight,
   IconFileText,
+  IconPackage,
   IconPlus,
   IconSelector,
 } from '@tabler/icons-react'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Entry, EntryKind } from '../api/entries'
 import { reportPdfUrl } from '../api/report'
@@ -195,7 +197,7 @@ function ReportButton({ projectId }: { projectId: number }) {
       <BottomSheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Hisob-kitob PDF"
+        title="Hisobot (PDF)"
       >
         <div className="space-y-3">
           <p className="text-label text-text-muted">
@@ -221,24 +223,65 @@ function ReportButton({ projectId }: { projectId: number }) {
               />
             </label>
           </div>
-          <button
-            type="button"
+
+          <ReportOption
+            icon={<IconFileText size={20} />}
+            title="Ish haqi hisoboti"
+            hint="Bajarilgan ishlar va qoldiq"
             onClick={() => {
               openLink(
-                reportPdfUrl(projectId, {
+                reportPdfUrl(projectId, 'labor', {
                   dateFrom: from || undefined,
                   dateTo: to || undefined,
                 }),
               )
               setOpen(false)
             }}
-            className="min-h-[44px] w-full rounded-btn bg-primary text-body text-on-primary active:scale-[0.98]"
-          >
-            PDF yuklab olish
-          </button>
+          />
+          <ReportOption
+            icon={<IconPackage size={20} />}
+            title="Material va xarajatlar"
+            hint="Materiallar, xarajatlar va qoldiq"
+            onClick={() => {
+              openLink(
+                reportPdfUrl(projectId, 'materials', {
+                  dateFrom: from || undefined,
+                  dateTo: to || undefined,
+                }),
+              )
+              setOpen(false)
+            }}
+          />
         </div>
       </BottomSheet>
     </>
+  )
+}
+
+function ReportOption({
+  icon,
+  title,
+  hint,
+  onClick,
+}: {
+  icon: ReactNode
+  title: string
+  hint: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 text-left active:scale-[0.99]"
+    >
+      <span className="text-primary">{icon}</span>
+      <span className="min-w-0">
+        <span className="block text-body text-text">{title}</span>
+        <span className="block text-label text-text-faint">{hint}</span>
+      </span>
+      <IconChevronRight size={16} className="ml-auto shrink-0 text-text-faint" />
+    </button>
   )
 }
 

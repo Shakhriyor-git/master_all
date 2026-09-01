@@ -24,7 +24,7 @@ from app.core.config import settings
 # callback_data
 # --------------------------------------------------------------------------
 class ProjectCb(CallbackData, prefix="prj"):
-    # open | list
+    # open | list | report_labor | report_materials
     action: str
     project_id: int
 
@@ -125,9 +125,17 @@ def project_card_kb(project_id: int) -> InlineKeyboardMarkup:
     kb.row(_open_app_button())
     kb.row(
         InlineKeyboardButton(
-            text="📄 Hisobot (PDF)",
+            text="📄 Ish haqi hisoboti",
             callback_data=ProjectCb(
-                action="report", project_id=project_id
+                action="report_labor", project_id=project_id
+            ).pack(),
+        )
+    )
+    kb.row(
+        InlineKeyboardButton(
+            text="📦 Material va xarajatlar",
+            callback_data=ProjectCb(
+                action="report_materials", project_id=project_id
             ).pack(),
         )
     )

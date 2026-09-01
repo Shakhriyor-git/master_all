@@ -3,17 +3,20 @@
 from datetime import UTC, date, datetime
 from typing import Annotated
 
+from collections.abc import Callable
+
 from fastapi import APIRouter, HTTPException, Query, Response, status
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser, DbSession, DownloadUser, OwnedProject
-from app.models import Project
+from app.models import Project, User
 from app.models.enums import ProjectStatus
 from app.schemas.common import ProjectSummary
 from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.services.report_data import gather_report_data, report_filename
-from app.services.report_pdf import build_report_pdf
+from app.services.report_pdf import build_labor_pdf, build_materials_pdf
 from app.services.summary import build_project_summary
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -75,15 +78,16 @@ async def project_summary(project: OwnedProject, db: DbSession):
     return await build_project_summary(db, project.id)
 
 
-@router.get("/{project_id}/report.pdf")
-async def project_report_pdf(
+async def _render_report(
     project_id: int,
-    user: DownloadUser,
-    db: DbSession,
-    date_from: date | None = None,
-    date_to: date | None = None,
-):
-    """Mijozga uzatiladigan hisob-kitob PDF'i — to'g'ridan-to'g'ri bazadan."""
+    user: User,
+    db: AsyncSession,
+    date_from: date | None,
+    date_to: date | None,
+    *,
+    builder: Callable[..., bytes],
+    part: str,
+) -> Response:
     project = (
         await db.execute(
             select(Project).where(
@@ -100,12 +104,40 @@ async def project_report_pdf(
 
     data = await gather_report_data(db, project, user, date_from, date_to)
     # 1 GB RAM — PDF yasash bloklovchi, threadpool'da
-    pdf = await run_in_threadpool(build_report_pdf, data)
-    fname = report_filename(project.title, data.generated_at)
+    pdf = await run_in_threadpool(builder, data)
+    fname = report_filename(project.title, data.generated_at, part)
     return Response(
         content=pdf,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{fname}"',
-        },
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+@router.get("/{project_id}/report/labor.pdf")
+async def project_report_labor_pdf(
+    project_id: int,
+    user: DownloadUser,
+    db: DbSession,
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
+    """ISH HAQI HISOBOTI — bajarilgan ishlar va ish haqi hisob-kitobi."""
+    return await _render_report(
+        project_id, user, db, date_from, date_to,
+        builder=build_labor_pdf, part="ish-haqi",
+    )
+
+
+@router.get("/{project_id}/report/materials.pdf")
+async def project_report_materials_pdf(
+    project_id: int,
+    user: DownloadUser,
+    db: DbSession,
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
+    """MATERIAL VA XARAJATLAR — materiallar, xarajatlar va hisob-kitob."""
+    return await _render_report(
+        project_id, user, db, date_from, date_to,
+        builder=build_materials_pdf, part="material",
     )
