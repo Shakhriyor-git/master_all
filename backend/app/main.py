@@ -37,6 +37,7 @@ log = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     log.info("Ishga tushmoqda: env=%s", settings.env)
     Path(settings.avatar_dir).mkdir(parents=True, exist_ok=True)
+    Path(settings.music_dir).mkdir(parents=True, exist_ok=True)
     if settings.bot_use_webhook:
         await start_bot_webhook()
     yield

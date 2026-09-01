@@ -34,6 +34,7 @@ class MeRead(BaseModel):
     catalog_items: int
     catalog_unpriced: int
     notes_count: int
+    music_enabled: bool
 
 
 class MeUpdate(BaseModel):
@@ -43,3 +44,4 @@ class MeUpdate(BaseModel):
     language: str | None = Field(default=None, min_length=2, max_length=8)
     onboarded: bool | None = None
     social_links: list[SocialLink] | None = Field(default=None, max_length=5)
+    music_enabled: bool | None = None

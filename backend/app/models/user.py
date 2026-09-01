@@ -46,6 +46,10 @@ class User(TimestampMixin, Base):
     onboarded: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false")
     )
+    # Asosiy ekranda musiqa tugmasi ko'rsatilsinmi
+    music_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     # [{"label": "Instagram", "url": "https://..."}], maksimum 5 ta
     social_links: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")

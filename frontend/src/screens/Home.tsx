@@ -1,14 +1,17 @@
 import {
-  IconBell,
   IconCash,
   IconChevronRight,
   IconFileText,
+  IconLoader2,
+  IconMusic,
   IconPackage,
+  IconPlayerPauseFilled,
+  IconPlayerPlayFilled,
   IconReceipt,
   IconSelector,
   IconTool,
 } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { reportPdfUrl } from '../api/report'
@@ -25,6 +28,7 @@ import { useSummary } from '../hooks/useEntries'
 import { useTimeline } from '../hooks/useTimeline'
 import { fmtMoney, fmtNumber, fmtQty } from '../lib/format'
 import { openLink } from '../lib/telegram'
+import { useMusic } from '../music/musicContext'
 
 export function Home() {
   const { active, projects, isLoading, setActive } = useActiveProject()
@@ -63,12 +67,12 @@ export function Home() {
             )}
           </div>
         </button>
-        <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-primary-soft text-primary">
-          <IconBell size={15} />
-        </span>
+        <MusicButton />
       </div>
 
       <Hero owes={owes} works={works} paid={paid} />
+
+      <ReportButton projectId={active.id} />
 
       <QuickBar
         onAdd={(t) => navigate(`/add?type=${t}`)}
@@ -89,8 +93,6 @@ export function Home() {
       </div>
       <Recent projectId={active.id} />
 
-      <ReportButton projectId={active.id} />
-
       <ProjectPicker
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
@@ -104,6 +106,97 @@ export function Home() {
         projectId={active.id}
       />
     </Screen>
+  )
+}
+
+function MusicButton() {
+  const m = useMusic()
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const lastTap = useRef(0)
+  const longTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longFired = useRef(false)
+
+  if (!m.available) return null
+
+  function clearLong() {
+    if (longTimer.current) {
+      clearTimeout(longTimer.current)
+      longTimer.current = null
+    }
+  }
+
+  function handleClick() {
+    if (longFired.current) {
+      longFired.current = false
+      return
+    }
+    const now = Date.now()
+    if (now - lastTap.current < 300) {
+      lastTap.current = 0
+      m.restart()
+    } else {
+      lastTap.current = now
+      setTimeout(() => {
+        if (lastTap.current === now) m.toggle()
+      }, 300)
+    }
+  }
+
+  const Icon = m.loading
+    ? IconLoader2
+    : m.playing
+      ? IconPlayerPauseFilled
+      : IconPlayerPlayFilled
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Musiqa"
+        onClick={handleClick}
+        onPointerDown={() => {
+          longFired.current = false
+          clearLong()
+          longTimer.current = setTimeout(() => {
+            longFired.current = true
+            setSheetOpen(true)
+          }, 500)
+        }}
+        onPointerUp={clearLong}
+        onPointerLeave={clearLong}
+        onPointerCancel={clearLong}
+        className={`flex h-[30px] w-[30px] items-center justify-center rounded-full bg-primary-soft text-primary ${
+          m.playing && !m.loading ? 'animate-pulse' : ''
+        }`}
+      >
+        <Icon size={15} className={m.loading ? 'animate-spin' : ''} />
+      </button>
+
+      <BottomSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Musiqa"
+      >
+        <div className="space-y-1">
+          {m.tracks.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                m.playIndex(i)
+                setSheetOpen(false)
+              }}
+              className={`flex min-h-[44px] w-full items-center gap-2 rounded-btn px-3 text-left text-body active:bg-surface-2 ${
+                i === m.index ? 'text-primary' : 'text-text'
+              }`}
+            >
+              <IconMusic size={15} className="shrink-0" />
+              <span className="truncate">{t.original_name}</span>
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+    </>
   )
 }
 
@@ -256,7 +349,7 @@ function ReportButton({ projectId }: { projectId: number }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[13px] border border-border bg-surface py-2.5 text-label text-primary active:scale-[0.99]"
+        className="mb-4 flex w-full items-center justify-center gap-1.5 rounded-[13px] border border-border bg-surface py-2.5 text-label text-primary active:scale-[0.99]"
       >
         <IconFileText size={16} /> Hisobot (PDF)
       </button>

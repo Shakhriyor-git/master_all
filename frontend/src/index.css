@@ -71,10 +71,17 @@
   }
 }
 
+:root {
+  /* Telegram viewport balandligi (lib/telegram.ts sinxronlaydi) */
+  --tg-vh: 100dvh;
+}
+
 html,
 body,
 #root {
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {

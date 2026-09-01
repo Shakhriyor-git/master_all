@@ -29,6 +29,7 @@ services:
         condition: service_healthy
     volumes:
       - avatars:/data/avatars
+      - music:/data/music
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
 
   caddy:
@@ -50,5 +51,6 @@ services:
 volumes:
   pgdata:
   avatars:
+  music:
   caddy_data:
   caddy_config:

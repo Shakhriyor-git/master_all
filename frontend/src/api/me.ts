@@ -22,6 +22,7 @@ export interface Me {
   catalog_items: number
   catalog_unpriced: number
   notes_count: number
+  music_enabled: boolean
 }
 
 export interface MePatch {
@@ -31,6 +32,7 @@ export interface MePatch {
   language?: string
   onboarded?: boolean
   social_links?: SocialLink[]
+  music_enabled?: boolean
 }
 
 export const getMe = () => api<Me>('/api/me')

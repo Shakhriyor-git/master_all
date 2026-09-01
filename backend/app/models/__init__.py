@@ -9,6 +9,7 @@ from app.models.price import PriceItem, ProjectPrice
 from app.models.project import Project
 from app.models.unit import MeasureUnit
 from app.models.user import User
+from app.models.user_track import UserTrack
 
 __all__ = [
     "AiUsage",
@@ -22,4 +23,5 @@ __all__ = [
     "Project",
     "ProjectPrice",
     "User",
+    "UserTrack",
 ]

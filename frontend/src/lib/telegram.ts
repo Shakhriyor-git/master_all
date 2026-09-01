@@ -32,6 +32,42 @@ export function initTelegram(): void {
   } catch {
     /* Telegram tashqarisida — e'tibor bermaymiz */
   }
+  syncViewport()
+}
+
+/**
+ * `--tg-vh` — haqiqiy ko'rinadigan balandlik. App shell (AppLayout) shu
+ * o'zgaruvchini `height` sifatida ishlatadi, shuning uchun `100vh` yoki
+ * Telegram sarlavhasi yig'ilishi navbar'ni siljitmaydi.
+ *
+ * `viewportStableHeight` — klaviatura ochilganda O'ZGARMAYDI (viewportHeight'dan farqi).
+ */
+export function syncViewport(): void {
+  let h = 0
+  try {
+    h = WebApp.viewportStableHeight || 0
+  } catch {
+    h = 0
+  }
+  if (!h && typeof window !== 'undefined') h = window.innerHeight
+  if (h > 0) {
+    document.documentElement.style.setProperty('--tg-vh', `${h}px`)
+  }
+}
+
+let _viewportBound = false
+export function bindViewportSync(): void {
+  if (_viewportBound) return
+  _viewportBound = true
+  syncViewport()
+  try {
+    WebApp.onEvent('viewportChanged', syncViewport)
+  } catch {
+    /* noop */
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', syncViewport)
+  }
 }
 
 export function getColorScheme(): Scheme {

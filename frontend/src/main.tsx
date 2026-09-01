@@ -5,11 +5,12 @@ import './index.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
-import { getColorScheme, initTelegram } from './lib/telegram'
+import { bindViewportSync, getColorScheme, initTelegram } from './lib/telegram'
 
 // Splash paytida ham to'g'ri mavzu
 document.documentElement.setAttribute('data-theme', getColorScheme())
 initTelegram()
+bindViewportSync()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('#root topilmadi')

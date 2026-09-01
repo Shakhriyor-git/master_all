@@ -57,6 +57,10 @@ class Settings(BaseSettings):
         return f"{self.media_root}/avatars"
 
     @property
+    def music_dir(self) -> str:
+        return f"{self.media_root}/music"
+
+    @property
     def is_production(self) -> bool:
         return self.env == "production"
 

@@ -45,7 +45,7 @@ export function BottomNav() {
   const navigate = useNavigate()
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]">
+    <nav className="z-20 flex-none border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex h-[62px] max-w-md items-end justify-around px-1">
         {TABS.slice(0, 2).map((t) => (
           <Tab key={t.to} {...t} />
