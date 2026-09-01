@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   IconPackage,
@@ -25,7 +25,7 @@ import { QuantityInput } from '../components/QuantityInput'
 import { Screen } from '../components/Screen'
 import { Segment } from '../components/Segment'
 import { useActiveProject } from '../hooks/activeProjectContext'
-import { useCreateEntry, useSummary } from '../hooks/useEntries'
+import { useCreateEntry } from '../hooks/useEntries'
 import { useMainButton } from '../hooks/useMainButton'
 import { KIND_LABEL } from '../lib/entryVisual'
 import { fmtMoney, fmtQty } from '../lib/format'
@@ -385,9 +385,6 @@ function ServiceFlow({
                 />
                 Mijoz o‘zi sotib oldi
               </label>
-              {paidBy === 'client' && (
-                <BudgetHint projectId={projectId} spend={total} />
-              )}
             </div>
           )}
 
@@ -510,52 +507,8 @@ function ExpenseFlow({
           />
           Mijoz o‘zi sotib oldi
         </label>
-        {paidBy === 'client' && (
-          <BudgetHint projectId={projectId} spend={amount ?? 0} />
-        )}
       </div>
     </Screen>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Mijoz budjeti — yozuv qo'shishda jonli qoldiq
-// ---------------------------------------------------------------------------
-function BudgetHint({
-  projectId,
-  spend,
-}: {
-  projectId: number
-  spend: number
-}) {
-  const summary = useSummary(projectId)
-  const b = summary.data?.budget
-  const given = Number(b?.given ?? 0)
-  const balance = Number(b?.balance ?? 0)
-
-  if (given <= 0) {
-    return (
-      <div className="rounded-btn bg-surface-2 px-3 py-2 text-label text-text-muted">
-        Mijoz hali pul bermagan.{' '}
-        <Link to="/budget" className="text-primary">
-          Qo‘shish
-        </Link>
-      </div>
-    )
-  }
-
-  const after = balance - spend
-  return (
-    <div className="rounded-btn bg-surface-2 px-3 py-2 text-label">
-      <div className="text-text-muted">
-        Mijoz budjeti: {fmtMoney(balance)} → {fmtMoney(after)} qoladi
-      </div>
-      {after < 0 && (
-        <div className="mt-0.5 text-danger">
-          ⚠️ Budjetdan {fmtMoney(-after)} oshib ketadi
-        </div>
-      )}
-    </div>
   )
 }
 

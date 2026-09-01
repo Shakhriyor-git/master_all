@@ -126,7 +126,7 @@ class ExpenseRow:
 @dataclass
 class PaymentRow:
     day: date
-    purpose: str  # labor | budget
+    purpose: str  # labor | material
     method: str
     amount: Decimal
 
@@ -148,15 +148,11 @@ class ReportData:
     expenses_client: list[ExpenseRow] = field(default_factory=list)
     payments: list[PaymentRow] = field(default_factory=list)
 
-    # Butun loyiha bo'yicha (Mini App bilan bir xil raqamlar)
+    # Butun loyiha bo'yicha (Mini App bilan bir xil raqamlar).
+    # Sana filtri bularga ta'sir qilmaydi — hisob-kitob doim to'liq.
     works_total: Decimal = Decimal(0)
-    materials_by_master: Decimal = Decimal(0)
-    paid_labor: Decimal = Decimal(0)
-    client_owes: Decimal = Decimal(0)
-    budget_given: Decimal = Decimal(0)
-    budget_spent_materials: Decimal = Decimal(0)
-    budget_spent_expenses: Decimal = Decimal(0)
-    budget_balance: Decimal = Decimal(0)
+    paid_labor: Decimal = Decimal(0)  # to'lovlar, purpose=labor
+    material_paid: Decimal = Decimal(0)  # to'lovlar, purpose=material
 
 
 _METHOD_UZ = {"cash": "Naqd", "card": "Karta", "transfer": "O'tkazma"}
@@ -525,7 +521,7 @@ def _mat_reckoning(data: ReportData, st: dict, num: _Num) -> list:
     mat_sum = sum((m.amount for m in data.materials_master), Decimal(0))
     exp_sum = sum((e.amount for e in data.expenses_master), Decimal(0))
     total = mat_sum + exp_sum
-    given = data.budget_given
+    given = data.material_paid
     left = total - given
     left_label = "QOLDIQ" if left >= 0 else "MIJOZ AVANSI"
 
@@ -585,7 +581,7 @@ def _materials_story(data: ReportData, st: dict) -> list:
         and not data.expenses_master
         and not data.materials_client
         and not data.expenses_client
-        and data.budget_given == 0
+        and data.material_paid == 0
     )
     if empty:
         flow.append(Paragraph(

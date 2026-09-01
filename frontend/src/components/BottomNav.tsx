@@ -10,6 +10,7 @@ import {
   IconUserFilled,
   type Icon,
 } from '@tabler/icons-react'
+import { motion } from 'framer-motion'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { hapticSuccess } from '../lib/telegram'
 
@@ -37,17 +38,21 @@ const TABS: TabDef[] = [
   },
 ]
 
+// Ikonka o'lchami HAR DOIM bir xil — faqat rang/to'ldirilish o'zgaradi.
+const ICON_SIZE = 24
+const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+
 export function BottomNav() {
   const navigate = useNavigate()
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pb-[env(safe-area-inset-bottom)] pt-1.5">
+      <div className="mx-auto grid max-w-md grid-cols-5 px-2 pb-[env(safe-area-inset-bottom)]">
         {TABS.slice(0, 2).map((t) => (
           <Tab key={t.to} {...t} />
         ))}
 
-        <div className="flex justify-center">
+        <div className="flex h-14 items-center justify-center">
           <button
             type="button"
             aria-label="Tez qo‘shish"
@@ -74,19 +79,37 @@ function Tab({ to, label, Icon, IconActive }: TabDef) {
     <NavLink
       to={to}
       end={to === '/'}
-      className="flex min-h-[44px] flex-col items-center gap-0.5 py-1"
+      // Balandlik QAT'IY — panel hech qachon sakramaydi
+      className="relative flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5"
     >
       {({ isActive }) => (
-        <span
-          className={
-            isActive
-              ? 'flex flex-col items-center gap-0.5 text-primary'
-              : 'flex flex-col items-center gap-0.5 text-text-faint'
-          }
-        >
-          {isActive ? <IconActive size={24} /> : <Icon size={23} />}
-          <span className="text-label">{label}</span>
-        </span>
+        <>
+          {isActive && (
+            <motion.span
+              layoutId="nav-indicator"
+              transition={SPRING}
+              className="absolute top-0 h-0.5 w-7 rounded-full bg-primary"
+            />
+          )}
+          <span
+            className={`transition-colors duration-150 ${
+              isActive ? 'text-primary' : 'text-text-faint'
+            }`}
+          >
+            {isActive ? (
+              <IconActive size={ICON_SIZE} />
+            ) : (
+              <Icon size={ICON_SIZE} />
+            )}
+          </span>
+          <span
+            className={`text-label leading-none transition-colors duration-150 ${
+              isActive ? 'text-primary' : 'text-text-faint'
+            }`}
+          >
+            {label}
+          </span>
+        </>
       )}
     </NavLink>
   )

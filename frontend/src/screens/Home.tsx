@@ -40,13 +40,12 @@ export function Home() {
   const s = summary.data
   const laborTotal = s ? Number(s.labor.works_total) : 0
   const spendTotal = s
-    ? Number(s.labor.materials_by_master) +
-      Number(s.labor.expenses_by_master) +
-      Number(s.budget.spent_materials) +
-      Number(s.budget.spent_expenses)
+    ? Number(s.materials.materials_total) +
+      Number(s.materials.expenses_total) +
+      Number(s.client_bought)
     : 0
-  const owes = s ? Number(s.labor.client_owes) : 0
-  const budgetLeft = s ? Number(s.budget.balance) : 0
+  const laborOwed = s ? Number(s.labor.remaining) : 0
+  const materialOwed = s ? Number(s.materials.remaining) : 0
 
   return (
     <Screen title="Asosiy">
@@ -92,13 +91,12 @@ export function Home() {
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <MiniCard
-          label={owes < 0 ? 'Mijoz avansi' : 'Mijoz qarzi'}
-          value={fmtMoney(Math.abs(owes))}
+          label={laborOwed < 0 ? 'Ish haqi avansi' : 'Ish haqi qarzi'}
+          value={fmtMoney(Math.abs(laborOwed))}
         />
         <MiniCard
-          label="Budjet qoldig‘i"
-          value={fmtMoney(budgetLeft)}
-          to="/budget"
+          label={materialOwed < 0 ? 'Material avansi' : 'Material qarzi'}
+          value={fmtMoney(Math.abs(materialOwed))}
         />
       </div>
 

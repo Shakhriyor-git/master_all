@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import EntryKind
 
@@ -12,11 +12,30 @@ class CategoryCreate(BaseModel):
     kind: EntryKind
     icon: str | None = Field(default=None, max_length=20)
 
+    @field_validator("name")
+    @classmethod
+    def _strip_name(cls, v: str) -> str:
+        """"Mebel " -> "Mebel" — bosh/oxirgi bo'shliqlar tozalanadi."""
+        v = v.strip()
+        if not v:
+            raise ValueError("nom bo'sh bo'lishi mumkin emas")
+        return v
+
 
 class CategoryUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     icon: str | None = Field(default=None, max_length=20)
     is_active: bool | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _strip_name(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            raise ValueError("nom bo'sh bo'lishi mumkin emas")
+        return v
 
 
 class CategoryRead(BaseModel):

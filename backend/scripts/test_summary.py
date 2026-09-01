@@ -86,28 +86,27 @@ async def main() -> int:
             Payment(project_id=pid, created_by_user_id=uid,
                     amount=Decimal("2000000"), purpose="labor"),
             Payment(project_id=pid, created_by_user_id=uid,
-                    amount=Decimal("1000000"), purpose="budget"),
+                    amount=Decimal("1000000"), purpose="material"),
         ])
         await session.commit()
 
         s = await build_project_summary(session, pid)
 
         checks: list[tuple[str, Decimal | int, Decimal | int]] = [
+            # Ish haqi qarzi = 2 400 000 − 2 000 000 = 400 000
             ("labor.works_total", s.labor.works_total, Decimal("2400000.00")),
-            ("labor.rework_total", s.labor.rework_total, Decimal("180000.00")),
-            ("labor.materials_by_master", s.labor.materials_by_master,
+            ("labor.paid", s.labor.paid, Decimal("2000000.00")),
+            ("labor.remaining", s.labor.remaining, Decimal("400000.00")),
+            # Material qarzi = (350 000 + 120 000) − 1 000 000 = −530 000 (avans)
+            ("materials.materials_total", s.materials.materials_total,
              Decimal("350000.00")),
-            ("labor.expenses_by_master", s.labor.expenses_by_master,
+            ("materials.expenses_total", s.materials.expenses_total,
              Decimal("120000.00")),
-            ("labor.paid_labor", s.labor.paid_labor, Decimal("2000000.00")),
-            ("labor.client_owes", s.labor.client_owes, Decimal("750000.00")),
-            ("budget.given", s.budget.given, Decimal("1000000.00")),
-            ("budget.spent_materials", s.budget.spent_materials,
-             Decimal("520000.00")),
-            ("budget.spent_expenses", s.budget.spent_expenses,
-             Decimal("120000.00")),
-            ("budget.spent_total", s.budget.spent_total, Decimal("640000.00")),
-            ("budget.balance", s.budget.balance, Decimal("360000.00")),
+            ("materials.paid", s.materials.paid, Decimal("1000000.00")),
+            ("materials.remaining", s.materials.remaining,
+             Decimal("-530000.00")),
+            # Mijoz o'zi olgan: Mat mijoz 520 000 + Transport 120 000
+            ("client_bought", s.client_bought, Decimal("640000.00")),
             ("meta.entries_count", s.meta.entries_count, 6),
         ]
 
@@ -117,15 +116,10 @@ async def main() -> int:
             if got != want
         ]
 
-        # Brak va ustaning ovqati qarzga kirmasligi — alohida
-        owes_without_specials = (
-            s.labor.works_total + s.labor.materials_by_master
-            - s.labor.paid_labor
-        )
-        if owes_without_specials != Decimal("750000.00"):
+        # Brak (180 000) ish haqi qarziga kirmasligi kerak
+        if s.labor.remaining != Decimal("400000.00"):
             failures.append(
-                "brak/ovqat qarzga kirib ketdi: "
-                f"{owes_without_specials}"
+                f"brak ish haqi qarziga kirib ketdi: {s.labor.remaining}"
             )
 
         await _cleanup(session)
@@ -139,8 +133,8 @@ async def main() -> int:
         for line in failures:
             print(f"  - {line}")
         return 1
-    print("\nHammasi joyida: client_owes=750 000, budget.balance=360 000.")
-    print("Brak (180 000) va ustaning ovqati (120 000) qarzga KIRMADI.")
+    print("\nHammasi joyida: ish haqi qarzi=400 000, material avansi=530 000.")
+    print("Brak (180 000) ish haqi qarziga KIRMADI.")
     return 0
 
 

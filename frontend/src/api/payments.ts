@@ -1,7 +1,7 @@
 import { api } from './client'
 
 export type PayMethod = 'cash' | 'card' | 'transfer'
-export type PayPurpose = 'labor' | 'budget'
+export type PayPurpose = 'labor' | 'material'
 
 export interface Payment {
   id: number

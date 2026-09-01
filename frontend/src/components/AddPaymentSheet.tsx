@@ -79,10 +79,10 @@ export function AddPaymentSheet({
           </button>
           <button
             type="button"
-            onClick={() => setPurpose('budget')}
+            onClick={() => setPurpose('material')}
             className="min-h-[52px] w-full rounded-btn bg-surface-2 text-body text-text active:scale-[0.98]"
           >
-            🧾 Xarajat uchun
+            📦 Material uchun
           </button>
         </div>
       ) : (
@@ -94,7 +94,7 @@ export function AddPaymentSheet({
               className="flex items-center gap-1 text-label text-primary"
             >
               <IconArrowLeft size={14} />
-              {purpose === 'labor' ? 'Ish haqi uchun' : 'Xarajat uchun'}
+              {purpose === 'labor' ? 'Ish haqi uchun' : 'Material uchun'}
             </button>
           )}
           <label className="block text-label text-text-muted">

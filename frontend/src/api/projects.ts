@@ -38,19 +38,18 @@ export const deleteProject = (id: number) =>
 export interface Summary {
   labor: {
     works_total: string
-    materials_by_master: string
-    paid_labor: string
-    client_owes: string
-    rework_total: string
-    expenses_by_master: string
+    paid: string
+    /** manfiy bo'lsa — mijoz avansi */
+    remaining: string
   }
-  budget: {
-    given: string
-    spent_materials: string
-    spent_expenses: string
-    spent_total: string
-    balance: string
+  materials: {
+    materials_total: string
+    expenses_total: string
+    paid: string
+    remaining: string
   }
+  /** paid_by=client yozuvlar — mijoz o'zi olgan, faqat ma'lumot */
+  client_bought: string
   meta: { entries_count: number; last_entry_date: string | null }
 }
 

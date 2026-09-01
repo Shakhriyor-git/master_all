@@ -7,24 +7,21 @@ from pydantic import BaseModel
 
 
 class LaborSummary(BaseModel):
-    """Ish haqi hisobi — usta topgan pul."""
+    """Ish haqi qarzi — bajarilgan ishlar minus mijoz ish haqi uchun to'lagani."""
 
     works_total: Decimal
-    materials_by_master: Decimal
-    paid_labor: Decimal
-    client_owes: Decimal
-    rework_total: Decimal  # ma'lumot uchun
-    expenses_by_master: Decimal  # ma'lumot uchun
+    paid: Decimal
+    remaining: Decimal  # manfiy bo'lsa — mijoz avansi
 
 
-class BudgetSummary(BaseModel):
-    """Mijoz budjeti — xarajat uchun berilgan naqd."""
+class MaterialsSummary(BaseModel):
+    """Material qarzi — usta olgan material/xarajat minus mijoz material uchun
+    to'lagani."""
 
-    given: Decimal
-    spent_materials: Decimal
-    spent_expenses: Decimal
-    spent_total: Decimal
-    balance: Decimal
+    materials_total: Decimal  # paid_by=master materiallar
+    expenses_total: Decimal  # paid_by=master xarajatlar
+    paid: Decimal
+    remaining: Decimal  # manfiy bo'lsa — mijoz avansi
 
 
 class SummaryMeta(BaseModel):
@@ -33,8 +30,10 @@ class SummaryMeta(BaseModel):
 
 
 class ProjectSummary(BaseModel):
-    """GET /api/projects/{id}/summary — ikkita mustaqil hisob + meta."""
+    """GET /api/projects/{id}/summary — ikkita mustaqil qarz + meta."""
 
     labor: LaborSummary
-    budget: BudgetSummary
+    materials: MaterialsSummary
+    # paid_by=client yozuvlar — mijoz o'zi sotib olgan, faqat ma'lumot uchun
+    client_bought: Decimal
     meta: SummaryMeta

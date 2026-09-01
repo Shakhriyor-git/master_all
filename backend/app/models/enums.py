@@ -43,14 +43,14 @@ class PaymentMethod(enum.StrEnum):
 
 
 class PaymentPurpose(enum.StrEnum):
-    """To'lov maqsadi.
+    """To'lov maqsadi — ikkita mustaqil qarz.
 
-    labor  — mijoz ish haqi uchun to'ladi, qarzni kamaytiradi
-    budget — mijoz xarajat uchun naqd berdi, budjetni to'ldiradi
+    labor     — mijoz ish haqi uchun to'ladi (ish haqi qarzini kamaytiradi)
+    material  — mijoz material uchun to'ladi (material qarzini kamaytiradi)
     """
 
     LABOR = "labor"
-    BUDGET = "budget"
+    MATERIAL = "material"
 
 
 class EntrySource(enum.StrEnum):

@@ -11,7 +11,7 @@ from app.models.enums import PaymentMethod, PaymentPurpose
 class PaymentCreate(BaseModel):
     amount: Decimal = Field(gt=0)
     method: PaymentMethod = PaymentMethod.CASH
-    # labor — ish haqi (qarzni kamaytiradi); budget — mijoz xarajat naqdi
+    # labor — ish haqi qarzini; material — material qarzini kamaytiradi
     purpose: PaymentPurpose = PaymentPurpose.LABOR
     paid_at: date | None = None
     note: str | None = None

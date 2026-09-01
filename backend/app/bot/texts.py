@@ -58,40 +58,40 @@ def esc(value: object) -> str:
     return html.escape(str(value)) if value is not None else ""
 
 
-def render_owes_line(client_owes: Decimal) -> str:
-    """Manfiy qarz hech qachon ko'rsatilmaydi."""
-    if client_owes > 0:
-        return f"Mijoz qarzi:   {fmt_money(client_owes)}"
-    if client_owes < 0:
-        return (
-            f"Mijoz avansi:  {fmt_money(-client_owes)}\n"
-            f"<i>kelgusi ishlardan yechiladi</i>"
-        )
-    return "Hisob-kitob teng"
+def render_debt_line(remaining: Decimal, kind: str) -> str:
+    """kind — 'Ish haqi' yoki 'Material'. Manfiy qoldiq = mijoz avansi."""
+    if remaining > 0:
+        return f"{kind} qarzi:  {fmt_money(remaining)}"
+    if remaining < 0:
+        return f"{kind} avansi:  {fmt_money(-remaining)}"
+    return f"{kind}: hisob teng"
 
 
 def render_project_card(project, summary) -> str:
     """Obyekt kartasi — faqat o'qish uchun. Tafsilotlar ilovada."""
     labor = summary.labor
-    budget = summary.budget
+    mat = summary.materials
     client = esc(project.client_name) if project.client_name else "—"
     lines = [
         f"🏠 <b>{esc(project.title)}</b>",
         f"Mijoz: {client}",
         "",
         "<b>Ish haqi hisobi</b>",
-        f"Ishlar:        {fmt_money(labor.works_total)}",
-        f"Material:      {fmt_money(labor.materials_by_master)}",
-        f"To'langan:     {fmt_money(labor.paid_labor)}",
+        f"Bajarilgan:    {fmt_money(labor.works_total)}",
+        f"To'langan:     {fmt_money(labor.paid)}",
         "─────────────────────",
-        render_owes_line(labor.client_owes),
+        render_debt_line(labor.remaining, "Ish haqi"),
+        "",
+        "<b>Material hisobi</b>",
+        f"Material:      {fmt_money(mat.materials_total)}",
+        f"Xarajat:       {fmt_money(mat.expenses_total)}",
+        f"To'langan:     {fmt_money(mat.paid)}",
+        "─────────────────────",
+        render_debt_line(mat.remaining, "Material"),
     ]
-    if budget.given > 0:
+    if summary.client_bought > 0:
         lines += [
             "",
-            "<b>Mijoz budjeti</b>",
-            f"Berilgan:      {fmt_money(budget.given)}",
-            f"Sarflangan:    {fmt_money(budget.spent_total)}",
-            f"Qoldiq:        {fmt_money(budget.balance)}",
+            f"<i>Mijoz o'zi olgan: {fmt_money(summary.client_bought)}</i>",
         ]
     return "\n".join(lines)

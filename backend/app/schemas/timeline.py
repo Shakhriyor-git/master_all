@@ -30,7 +30,7 @@ class TimelinePayment(BaseModel):
     type: Literal["payment"] = "payment"
     id: int
     kind: Literal["payment"] = "payment"  # filtr birxilligi uchun
-    purpose: str  # labor | budget
+    purpose: str  # labor | material
     amount: Decimal
     method: str
     note: str | None

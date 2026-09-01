@@ -162,11 +162,6 @@ async def gather_report_data(
         expenses_client=expenses_client,
         payments=payments,
         works_total=summary.labor.works_total,
-        materials_by_master=summary.labor.materials_by_master,
-        paid_labor=summary.labor.paid_labor,
-        client_owes=summary.labor.client_owes,
-        budget_given=summary.budget.given,
-        budget_spent_materials=summary.budget.spent_materials,
-        budget_spent_expenses=summary.budget.spent_expenses,
-        budget_balance=summary.budget.balance,
+        paid_labor=summary.labor.paid,
+        material_paid=summary.materials.paid,
     )

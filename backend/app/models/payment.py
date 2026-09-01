@@ -58,7 +58,7 @@ class Payment(TimestampMixin, SoftDeleteMixin, Base):
     method: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="cash"
     )
-    # labor — qarzni kamaytiradi; budget — mijoz budjetini to'ldiradi
+    # labor — ish haqi qarzini kamaytiradi; material — material qarzini
     purpose: Mapped[str] = mapped_column(
         String(20), nullable=False, default="labor", server_default="labor"
     )

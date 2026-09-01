@@ -40,9 +40,9 @@ export const METHOD_LABEL: Record<PayMethod, string> = {
   transfer: 'O‘tkazma',
 }
 
-export const PURPOSE_LABEL: Record<'labor' | 'budget', string> = {
+export const PURPOSE_LABEL: Record<'labor' | 'material', string> = {
   labor: 'Ish haqi uchun',
-  budget: 'Xarajat uchun',
+  material: 'Material uchun',
 }
 
 export const METHOD_ICON: Record<PayMethod, typeof IconCash> = {

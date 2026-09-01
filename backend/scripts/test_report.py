@@ -93,9 +93,8 @@ def _big_data() -> ReportData:
         works=works,
         materials_master=materials,
         works_total=Decimal("90000000"),
-        materials_by_master=Decimal("24300000"),
         paid_labor=Decimal("50000000"),
-        client_owes=Decimal("64300000"),
+        material_paid=Decimal("20000000"),
     )
 
 
@@ -146,11 +145,8 @@ def _cyrillic_data() -> ReportData:
             ),
         ],
         works_total=Decimal("1680000"),
-        materials_by_master=Decimal("900000"),
         paid_labor=Decimal("1000000"),
-        client_owes=Decimal("1580000"),
-        budget_given=Decimal("500000"),
-        budget_spent_materials=Decimal("135000"),
+        material_paid=Decimal("500000"),
     )
 
 

@@ -54,7 +54,7 @@ PROJECT_PRICE_NAMES = ["Shpatlyovka", "Plitka yotqizish", "Sement"]
 ENTRIES_SPEC: list[tuple[str, Decimal, datetime.date, PaidBy]] = [
     ("Shpatlyovka", Decimal("40"), datetime.date(2026, 8, 10), PaidBy.MASTER),
     ("Plitka yotqizish", Decimal("18"), datetime.date(2026, 8, 15), PaidBy.MASTER),
-    ("Sement", Decimal("12"), datetime.date(2026, 8, 16), PaidBy.CLIENT),
+    ("Sement", Decimal("12"), datetime.date(2026, 8, 16), PaidBy.MASTER),
 ]
 
 
@@ -162,13 +162,26 @@ async def main() -> None:
             defaults={
                 "created_by_user_id": user.id,
                 "method": PaymentMethod.CASH,
+                "purpose": "labor",
+            },
+        )
+        await get_or_create(
+            session,
+            Payment,
+            project_id=project.id,
+            amount=Decimal("500000"),
+            paid_at=datetime.date(2026, 8, 21),
+            defaults={
+                "created_by_user_id": user.id,
+                "method": PaymentMethod.CASH,
+                "purpose": "material",
             },
         )
 
         await session.commit()
 
     print("Seed tayyor: 1 usta, 1 loyiha, "
-          f"{len(CATALOG)} narx, {len(ENTRIES_SPEC)} yozuv, 1 to'lov.")
+          f"{len(CATALOG)} narx, {len(ENTRIES_SPEC)} yozuv, 2 to'lov.")
 
 
 if __name__ == "__main__":

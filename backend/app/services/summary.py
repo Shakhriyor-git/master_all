@@ -1,4 +1,7 @@
-"""Loyiha balansi — ikkita mustaqil hisob (ish haqi / mijoz budjeti).
+"""Loyiha balansi — ikkita mustaqil qarz.
+
+  1. Ish haqi qarzi  = bajarilgan ishlar − mijoz ish haqi uchun to'lagani
+  2. Material qarzi   = usta olgan material/xarajat − mijoz material uchun to'lagani
 
 Ikkalasi hech qachon qo'shilmaydi. Bitta agregat SQL so'rovda hisoblanadi,
 hamma joyda `deleted_at IS NULL`.
@@ -12,8 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Entry, Payment
 from app.models.enums import EntryKind, PaidBy, PaymentPurpose
 from app.schemas.common import (
-    BudgetSummary,
     LaborSummary,
+    MaterialsSummary,
     ProjectSummary,
     SummaryMeta,
 )
@@ -52,15 +55,11 @@ async def build_project_summary(
 
     stmt = select(
         _sum_if(is_work & billable).label("works_total"),
-        _sum_if(is_work & Entry.is_rework.is_(True)).label("rework_total"),
-        _sum_if(is_material & by_master & billable).label(
-            "materials_by_master"
-        ),
-        _sum_if(is_expense & by_master).label("expenses_by_master"),
-        _sum_if(is_material & by_client).label("spent_materials"),
-        _sum_if(is_expense & by_client).label("spent_expenses"),
+        _sum_if(is_material & by_master & billable).label("materials_master"),
+        _sum_if(is_expense & by_master).label("expenses_master"),
+        _sum_if((is_material | is_expense) & by_client).label("client_bought"),
         _payments_sum(PaymentPurpose.LABOR).label("paid_labor"),
-        _payments_sum(PaymentPurpose.BUDGET).label("given"),
+        _payments_sum(PaymentPurpose.MATERIAL).label("paid_material"),
         func.count(Entry.id).label("entries_count"),
         func.max(Entry.entry_date).label("last_entry_date"),
     ).where(
@@ -71,33 +70,32 @@ async def build_project_summary(
     row = (await db.execute(stmt)).one()
 
     works_total = _money(row.works_total)
-    materials_by_master = _money(row.materials_by_master)
     paid_labor = _money(row.paid_labor)
-
-    given = _money(row.given)
-    spent_materials = _money(row.spent_materials)
-    spent_expenses = _money(row.spent_expenses)
+    materials_total = _money(row.materials_master)
+    expenses_total = _money(row.expenses_master)
+    paid_material = _money(row.paid_material)
 
     labor = LaborSummary(
         works_total=works_total,
-        materials_by_master=materials_by_master,
-        paid_labor=paid_labor,
+        paid=paid_labor,
         # manfiy bo'lishi mumkin (avans) — xizmat raqamni o'zgartirmaydi
-        client_owes=(works_total + materials_by_master - paid_labor).quantize(
-            _CENTS
-        ),
-        rework_total=_money(row.rework_total),
-        expenses_by_master=_money(row.expenses_by_master),
+        remaining=(works_total - paid_labor).quantize(_CENTS),
     )
-    budget = BudgetSummary(
-        given=given,
-        spent_materials=spent_materials,
-        spent_expenses=spent_expenses,
-        spent_total=(spent_materials + spent_expenses).quantize(_CENTS),
-        balance=(given - spent_materials - spent_expenses).quantize(_CENTS),
+    materials = MaterialsSummary(
+        materials_total=materials_total,
+        expenses_total=expenses_total,
+        paid=paid_material,
+        remaining=(
+            materials_total + expenses_total - paid_material
+        ).quantize(_CENTS),
     )
     meta = SummaryMeta(
         entries_count=row.entries_count or 0,
         last_entry_date=row.last_entry_date,
     )
-    return ProjectSummary(labor=labor, budget=budget, meta=meta)
+    return ProjectSummary(
+        labor=labor,
+        materials=materials,
+        client_bought=_money(row.client_bought),
+        meta=meta,
+    )
