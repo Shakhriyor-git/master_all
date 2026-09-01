@@ -39,13 +39,8 @@ export function Home() {
 
   const s = summary.data
   const laborTotal = s ? Number(s.labor.works_total) : 0
-  const spendTotal = s
-    ? Number(s.materials.materials_total) +
-      Number(s.materials.expenses_total) +
-      Number(s.client_bought)
-    : 0
-  const laborOwed = s ? Number(s.labor.remaining) : 0
-  const materialOwed = s ? Number(s.materials.remaining) : 0
+  const spendTotal = s ? Number(s.materials.total_spent) : 0
+  const owes = s ? Number(s.labor.remaining) : 0
 
   return (
     <Screen title="Asosiy">
@@ -78,8 +73,27 @@ export function Home() {
 
       <ReportButton projectId={active.id} />
 
+      <div className="mt-3 rounded-card border border-border bg-surface p-4">
+        <div className="text-label text-text-muted">
+          {owes < 0 ? 'Mijoz avansi' : 'Mijoz qarzi'}
+        </div>
+        <CountUp
+          value={Math.abs(owes)}
+          className="mt-0.5 block text-2xl font-semibold text-text"
+        />
+        <div className="mt-0.5 text-label text-text-faint">
+          Bajarilgan {fmtMoney(laborTotal)} · to‘langan{' '}
+          {fmtMoney(s ? Number(s.labor.paid) : 0)}
+        </div>
+      </div>
+
       <Block kind="work" projectId={active.id} title="Bajarilgan ishlar" />
-      <Block kind="material" projectId={active.id} title="Materiallar" />
+      <Block
+        kind="material"
+        projectId={active.id}
+        title="Materiallar"
+        total={spendTotal}
+      />
       <Block
         kind="expense"
         projectId={active.id}
@@ -88,17 +102,6 @@ export function Home() {
       />
 
       <PaymentsBlock projectId={active.id} />
-
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <MiniCard
-          label={laborOwed < 0 ? 'Ish haqi avansi' : 'Ish haqi qarzi'}
-          value={fmtMoney(Math.abs(laborOwed))}
-        />
-        <MiniCard
-          label={materialOwed < 0 ? 'Material avansi' : 'Material qarzi'}
-          value={fmtMoney(Math.abs(materialOwed))}
-        />
-      </div>
 
       <ProjectPicker
         open={pickerOpen}
@@ -116,11 +119,14 @@ function Block({
   projectId,
   title,
   hideIfEmpty,
+  total,
 }: {
   kind: EntryKind
   projectId: number
   title: string
   hideIfEmpty?: boolean
+  /** sarlavha ostida ko'rsatiladigan jami summa */
+  total?: number
 }) {
   const navigate = useNavigate()
   const { data: recent = [], isLoading } = useRecentEntries(projectId, kind)
@@ -130,7 +136,14 @@ function Block({
   return (
     <section className="mt-4">
       <div className="mb-1.5 flex items-center justify-between">
-        <h2 className="text-label uppercase text-text-muted">{title}</h2>
+        <div>
+          <h2 className="text-label uppercase text-text-muted">{title}</h2>
+          {total != null && (
+            <div className="text-body text-text">
+              Jami sarflangan: {fmtMoney(total)}
+            </div>
+          )}
+        </div>
         {recent.length > 0 && (
           <Link
             to={`/history?kind=${kind}`}
@@ -340,27 +353,3 @@ function PaymentsBlock({ projectId }: { projectId: number }) {
   )
 }
 
-function MiniCard({
-  label,
-  value,
-  to,
-}: {
-  label: string
-  value: string
-  to?: string
-}) {
-  const inner = (
-    <>
-      <div className="text-label text-text-muted">{label}</div>
-      <div className="mt-0.5 text-body text-text">{value}</div>
-    </>
-  )
-  const cls = 'block rounded-card border border-border bg-surface p-3'
-  return to ? (
-    <Link to={to} className={`${cls} active:scale-[0.99]`}>
-      {inner}
-    </Link>
-  ) : (
-    <div className={cls}>{inner}</div>
-  )
-}

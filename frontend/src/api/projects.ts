@@ -39,17 +39,14 @@ export interface Summary {
   labor: {
     works_total: string
     paid: string
-    /** manfiy bo'lsa — mijoz avansi */
+    /** works_total − paid. Manfiy bo'lsa — mijoz avansi */
     remaining: string
   }
   materials: {
     materials_total: string
     expenses_total: string
-    paid: string
-    remaining: string
+    total_spent: string
   }
-  /** paid_by=client yozuvlar — mijoz o'zi olgan, faqat ma'lumot */
-  client_bought: string
   meta: { entries_count: number; last_entry_date: string | null }
 }
 

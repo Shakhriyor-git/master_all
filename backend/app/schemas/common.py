@@ -7,21 +7,23 @@ from pydantic import BaseModel
 
 
 class LaborSummary(BaseModel):
-    """Ish haqi qarzi — bajarilgan ishlar minus mijoz ish haqi uchun to'lagani."""
+    """Ish haqi — yagona qarz manbai.
+
+    remaining = works_total − paid. Manfiy bo'lsa — mijoz avansi.
+    """
 
     works_total: Decimal
     paid: Decimal
-    remaining: Decimal  # manfiy bo'lsa — mijoz avansi
+    remaining: Decimal
 
 
 class MaterialsSummary(BaseModel):
-    """Material qarzi — usta olgan material/xarajat minus mijoz material uchun
-    to'lagani."""
+    """Material va xarajat — faqat ro'yxat va jami. Qarz yo'q:
+    materialni har doim mijoz to'laydi."""
 
-    materials_total: Decimal  # paid_by=master materiallar
-    expenses_total: Decimal  # paid_by=master xarajatlar
-    paid: Decimal
-    remaining: Decimal  # manfiy bo'lsa — mijoz avansi
+    materials_total: Decimal
+    expenses_total: Decimal
+    total_spent: Decimal  # materials_total + expenses_total
 
 
 class SummaryMeta(BaseModel):
@@ -30,10 +32,8 @@ class SummaryMeta(BaseModel):
 
 
 class ProjectSummary(BaseModel):
-    """GET /api/projects/{id}/summary — ikkita mustaqil qarz + meta."""
+    """GET /api/projects/{id}/summary — bitta qarz + material ro'yxati + meta."""
 
     labor: LaborSummary
     materials: MaterialsSummary
-    # paid_by=client yozuvlar — mijoz o'zi sotib olgan, faqat ma'lumot uchun
-    client_bought: Decimal
     meta: SummaryMeta

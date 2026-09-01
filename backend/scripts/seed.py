@@ -174,7 +174,7 @@ async def main() -> None:
             defaults={
                 "created_by_user_id": user.id,
                 "method": PaymentMethod.CASH,
-                "purpose": "material",
+                "purpose": "labor",
             },
         )
 

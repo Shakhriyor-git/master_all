@@ -58,13 +58,13 @@ def esc(value: object) -> str:
     return html.escape(str(value)) if value is not None else ""
 
 
-def render_debt_line(remaining: Decimal, kind: str) -> str:
-    """kind — 'Ish haqi' yoki 'Material'. Manfiy qoldiq = mijoz avansi."""
+def render_owes_line(remaining: Decimal) -> str:
+    """Ish haqi qoldig'i. Manfiy bo'lsa — mijoz avansi."""
     if remaining > 0:
-        return f"{kind} qarzi:  {fmt_money(remaining)}"
+        return f"Mijoz qarzi:   {fmt_money(remaining)}"
     if remaining < 0:
-        return f"{kind} avansi:  {fmt_money(-remaining)}"
-    return f"{kind}: hisob teng"
+        return f"Mijoz avansi:  {fmt_money(-remaining)}"
+    return "Hisob-kitob teng"
 
 
 def render_project_card(project, summary) -> str:
@@ -76,22 +76,13 @@ def render_project_card(project, summary) -> str:
         f"🏠 <b>{esc(project.title)}</b>",
         f"Mijoz: {client}",
         "",
-        "<b>Ish haqi hisobi</b>",
+        "<b>Ish haqi</b>",
         f"Bajarilgan:    {fmt_money(labor.works_total)}",
         f"To'langan:     {fmt_money(labor.paid)}",
         "─────────────────────",
-        render_debt_line(labor.remaining, "Ish haqi"),
+        render_owes_line(labor.remaining),
         "",
-        "<b>Material hisobi</b>",
-        f"Material:      {fmt_money(mat.materials_total)}",
-        f"Xarajat:       {fmt_money(mat.expenses_total)}",
-        f"To'langan:     {fmt_money(mat.paid)}",
-        "─────────────────────",
-        render_debt_line(mat.remaining, "Material"),
+        "<b>Material va xarajat</b>",
+        f"Sarflangan:    {fmt_money(mat.total_spent)}",
     ]
-    if summary.client_bought > 0:
-        lines += [
-            "",
-            f"<i>Mijoz o'zi olgan: {fmt_money(summary.client_bought)}</i>",
-        ]
     return "\n".join(lines)

@@ -43,10 +43,12 @@ class PaymentMethod(enum.StrEnum):
 
 
 class PaymentPurpose(enum.StrEnum):
-    """To'lov maqsadi — ikkita mustaqil qarz.
+    """To'lov maqsadi.
 
-    labor     — mijoz ish haqi uchun to'ladi (ish haqi qarzini kamaytiradi)
-    material  — mijoz material uchun to'ladi (material qarzini kamaytiradi)
+    labor     — barcha yangi to'lovlar (ish haqi qarzini kamaytiradi)
+    material  — ESKI to'lovlar (material qarzi tushunchasi olib tashlangan).
+                Yangi to'lovlarda ishlatilmaydi; hisobga kirmaydi, faqat
+                Tarixda ko'rinadi.
     """
 
     LABOR = "labor"

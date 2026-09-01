@@ -87,17 +87,6 @@ export function TimelineEntryCard({ entry, onOpen, onDelete }: Props) {
           {entry.is_rework && (
             <Chip className="bg-danger-soft text-danger">⚠️ Brak</Chip>
           )}
-          {entry.kind !== 'work' && (
-            <Chip
-              className={
-                entry.paid_by === 'client'
-                  ? 'bg-success-soft text-success'
-                  : 'bg-surface-2 text-text-muted'
-              }
-            >
-              {entry.paid_by === 'client' ? 'Mijoz to‘ladi' : 'Usta to‘ladi'}
-            </Chip>
-          )}
           {MethodIcon && entry.payment_method && (
             <Chip className="bg-surface-2 text-text-muted">
               <MethodIcon size={12} />

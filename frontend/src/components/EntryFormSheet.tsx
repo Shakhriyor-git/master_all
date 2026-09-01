@@ -2,12 +2,7 @@ import { useRef, useState } from 'react'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import type { AiDraft } from '../api/ai'
 import { createPriceItem } from '../api/catalog'
-import type {
-  CreateEntryBody,
-  EntryKind,
-  PaidBy,
-  PayMethod,
-} from '../api/entries'
+import type { CreateEntryBody, EntryKind, PayMethod } from '../api/entries'
 import { useCreateEntry } from '../hooks/useEntries'
 import { KIND_LABEL } from '../lib/entryVisual'
 import { fmtMoney } from '../lib/format'
@@ -55,7 +50,6 @@ export function EntryFormSheet({
   const [qty, setQty] = useState<number | null>(null)
   const [unit, setUnit] = useState('')
   const [amount, setAmount] = useState<number | null>(null)
-  const [paidBy, setPaidBy] = useState<PaidBy>('master')
   const [method, setMethod] = useState<PayMethod>('cash')
   const [entryDate, setEntryDate] = useState(today())
   const [note, setNote] = useState('')
@@ -72,7 +66,6 @@ export function EntryFormSheet({
     setQty(draft?.quantity ? Number(draft.quantity) : null)
     setUnit(draft?.unit ?? '')
     setAmount(draft?.amount ? Number(draft.amount) : null)
-    setPaidBy(draft?.paid_by ?? 'master')
     setMethod(draft?.payment_method ?? 'cash')
     setEntryDate(draft?.entry_date ?? today())
     setNote(draft?.note ?? '')
@@ -102,7 +95,7 @@ export function EntryFormSheet({
       vendor: vendor.trim() || undefined,
     }
     if (!isWork) {
-      body.paid_by = paidBy
+      // material/xarajatni backend har doim mijoz hisobiga yozadi
       body.payment_method = method
     }
     await create.mutateAsync(body)
@@ -240,20 +233,6 @@ export function EntryFormSheet({
             onChange={(e) => setNote(e.target.value)}
           />
         </label>
-
-        {!isWork && (
-          <label className="flex items-center gap-2 text-label text-text-muted">
-            <input
-              type="checkbox"
-              checked={paidBy === 'client'}
-              onChange={(e) =>
-                setPaidBy(e.target.checked ? 'client' : 'master')
-              }
-              className="h-4 w-4 accent-[var(--primary)]"
-            />
-            Mijoz o‘zi sotib oldi
-          </label>
-        )}
 
         {!isExpense && (
           <label className="flex items-center gap-2 text-label text-text-muted">

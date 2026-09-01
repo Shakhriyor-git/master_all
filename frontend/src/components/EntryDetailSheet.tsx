@@ -69,12 +69,6 @@ export function EntryDetailSheet({ projectId, entry, onClose }: Props) {
           />
         )}
         <Row k="Summa" v={fmtMoney(entry.amount)} strong />
-        {entry.kind !== 'work' && (
-          <Row
-            k="To‘lagan"
-            v={entry.paid_by === 'client' ? 'Mijoz' : 'Usta'}
-          />
-        )}
         {entry.payment_method && (
           <Row k="Usul" v={METHOD_LABEL[entry.payment_method]} />
         )}

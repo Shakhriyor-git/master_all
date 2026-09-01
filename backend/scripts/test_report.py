@@ -91,10 +91,9 @@ def _big_data() -> ReportData:
         master_phone="+998916600106",
         generated_at=datetime.date(2026, 8, 30),
         works=works,
-        materials_master=materials,
+        materials=materials,
         works_total=Decimal("90000000"),
         paid_labor=Decimal("50000000"),
-        material_paid=Decimal("20000000"),
     )
 
 
@@ -122,7 +121,7 @@ def _cyrillic_data() -> ReportData:
                 is_rework=True, note="Қайта қилинди — брак",
             ),
         ],
-        materials_master=[
+        materials=[
             MaterialRow(
                 day=day, name="Шлакоблок", qty=Decimal("200"),
                 unit_label="дона", unit_price=Decimal("4500"),
@@ -130,23 +129,20 @@ def _cyrillic_data() -> ReportData:
                 vendor="Қурилиш бозори",
                 note="шлакаблок — 200 дона\nгазаблок — 40 дона\nцемент — 5 қоп",
             ),
-        ],
-        expenses_master=[
-            ExpenseRow(
-                day=day, name="Такси (материал ташиш)",
-                amount=Decimal("120000"), method="cash",
-            ),
-        ],
-        materials_client=[
             MaterialRow(
                 day=day, name="Обойный клей", qty=Decimal("3"),
                 unit_label="дона", unit_price=Decimal("45000"),
                 amount=Decimal("135000"), method="card",
             ),
         ],
+        expenses=[
+            ExpenseRow(
+                day=day, name="Такси (материал ташиш)",
+                amount=Decimal("120000"), method="cash",
+            ),
+        ],
         works_total=Decimal("1680000"),
         paid_labor=Decimal("1000000"),
-        material_paid=Decimal("500000"),
     )
 
 

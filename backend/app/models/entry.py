@@ -50,9 +50,12 @@ class Entry(TimestampMixin, SoftDeleteMixin, Base):
             "NOT (is_rework AND is_billable)",
             name="ck_entries_rework_not_billable",
         ),
+        # Material va xarajatni har doim mijoz to'laydi — usta faqat yozib
+        # boradi. "Usta xarajati billable emas" qoidasi endi ma'nosiz (olib
+        # tashlandi).
         CheckConstraint(
-            "NOT (kind = 'expense' AND paid_by = 'master' AND is_billable)",
-            name="ck_entries_master_expense_not_billable",
+            "kind NOT IN ('material', 'expense') OR paid_by = 'client'",
+            name="ck_entries_material_expense_client",
         ),
         CheckConstraint(
             "kind <> 'work' OR (payment_method IS NULL AND vendor IS NULL)",
@@ -141,12 +144,9 @@ def _enforce_entry_rules(
     """
     if target.is_rework:
         target.is_billable = False
-    effective_paid_by = target.paid_by or PaidBy.MASTER.value
-    if (
-        target.kind == EntryKind.EXPENSE
-        and effective_paid_by == PaidBy.MASTER.value
-    ):
-        target.is_billable = False
+    # Material va xarajatni har doim mijoz to'laydi
+    if target.kind in (EntryKind.MATERIAL, EntryKind.EXPENSE):
+        target.paid_by = PaidBy.CLIENT.value
     if target.kind == EntryKind.WORK:
         target.payment_method = None
         target.vendor = None

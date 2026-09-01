@@ -1,8 +1,8 @@
-"""Hisob-kitob PDF uchun ma'lumot yig'ish — API va bot uchun bir xil.
+"""Hisobot PDF uchun ma'lumot yig'ish — API va bot uchun bir xil.
 
-Faqat bazadan: entries + payments + `build_project_summary`. Bo'lim 5 (yakuniy
-hisob) butun loyiha bo'yicha — Mini App'dagi raqamlar bilan bir xil bo'lishi
-uchun sana filtri unga ta'sir qilmaydi.
+Faqat bazadan: entries + `build_project_summary` (ish haqi qarzi uchun).
+Ish haqi hisob-kitobi butun loyiha bo'yicha — Mini App'dagi raqamlar bilan
+bir xil bo'lishi uchun sana filtri unga ta'sir qilmaydi.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ from app.models import (
     Category,
     Entry,
     MeasureUnit,
-    Payment,
     PriceItem,
     Project,
     ProjectPrice,
@@ -26,7 +25,6 @@ from app.models import (
 from app.services.report_pdf import (
     ExpenseRow,
     MaterialRow,
-    PaymentRow,
     ReportData,
     WorkRow,
 )
@@ -77,10 +75,8 @@ async def gather_report_data(
     stmt = stmt.order_by(Entry.entry_date, Entry.id)
 
     works: list[WorkRow] = []
-    materials_master: list[MaterialRow] = []
-    materials_client: list[MaterialRow] = []
-    expenses_master: list[ExpenseRow] = []
-    expenses_client: list[ExpenseRow] = []
+    materials: list[MaterialRow] = []
+    expenses: list[ExpenseRow] = []
 
     for entry, cat_name, unit_label in (await db.execute(stmt)).all():
         unit = unit_label or entry.unit
@@ -97,7 +93,7 @@ async def gather_report_data(
                 note=entry.note,
             ))
         elif entry.kind == "material":
-            row = MaterialRow(
+            materials.append(MaterialRow(
                 day=entry.entry_date,
                 name=entry.name,
                 qty=entry.quantity,
@@ -107,43 +103,15 @@ async def gather_report_data(
                 method=entry.payment_method,
                 vendor=entry.vendor,
                 note=entry.note,
-            )
-            if entry.paid_by == "client":
-                materials_client.append(row)
-            else:
-                materials_master.append(row)
+            ))
         elif entry.kind == "expense":
-            row = ExpenseRow(
+            expenses.append(ExpenseRow(
                 day=entry.entry_date,
                 name=entry.name,
                 amount=entry.amount,
                 method=entry.payment_method,
                 note=entry.note,
-            )
-            if entry.paid_by == "client":
-                expenses_client.append(row)
-            else:
-                expenses_master.append(row)
-
-    pay_stmt = select(Payment).where(
-        Payment.project_id == project.id,
-        Payment.deleted_at.is_(None),
-    )
-    if date_from is not None:
-        pay_stmt = pay_stmt.where(Payment.paid_at >= date_from)
-    if date_to is not None:
-        pay_stmt = pay_stmt.where(Payment.paid_at <= date_to)
-    pay_stmt = pay_stmt.order_by(Payment.paid_at, Payment.id)
-
-    payments = [
-        PaymentRow(
-            day=p.paid_at,
-            purpose=p.purpose,
-            method=p.method,
-            amount=p.amount,
-        )
-        for p in (await db.execute(pay_stmt)).scalars().all()
-    ]
+            ))
 
     summary = await build_project_summary(db, project.id)
 
@@ -156,12 +124,8 @@ async def gather_report_data(
         period_from=date_from,
         period_to=date_to,
         works=works,
-        materials_master=materials_master,
-        materials_client=materials_client,
-        expenses_master=expenses_master,
-        expenses_client=expenses_client,
-        payments=payments,
+        materials=materials,
+        expenses=expenses,
         works_total=summary.labor.works_total,
         paid_labor=summary.labor.paid,
-        material_paid=summary.materials.paid,
     )

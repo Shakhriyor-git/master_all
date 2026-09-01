@@ -168,7 +168,6 @@ function ServiceFlow({
   const [item, setItem] = useState<PriceItem | null>(null)
   const [priceOverride, setPriceOverride] = useState<number | null>(null)
   const [qty, setQty] = useState<number | null>(null)
-  const [paidBy, setPaidBy] = useState<'master' | 'client'>('master')
   const [method, setMethod] = useState<PayMethod>('cash')
   const [newOpen, setNewOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -217,7 +216,6 @@ function ServiceFlow({
     const body: CreateEntryBody = {
       price_item_id: item.id,
       quantity: qty ?? undefined,
-      paid_by: kind === 'material' ? paidBy : undefined,
       payment_method: kind === 'material' ? method : undefined,
     }
     if (needsPrice) body.unit_price = priceOverride ?? undefined
@@ -229,7 +227,6 @@ function ServiceFlow({
     ready,
     qty,
     kind,
-    paidBy,
     method,
     needsPrice,
     priceOverride,
@@ -364,28 +361,15 @@ function ServiceFlow({
           </div>
 
           {kind === 'material' && (
-            <div className="space-y-2">
-              <Segment
-                options={[
-                  { value: 'cash', label: 'Naqd' },
-                  { value: 'card', label: 'Karta' },
-                  { value: 'transfer', label: 'O‘tkazma' },
-                ]}
-                value={method}
-                onChange={(v) => setMethod(v as PayMethod)}
-              />
-              <label className="flex items-center gap-2 text-label text-text-muted">
-                <input
-                  type="checkbox"
-                  checked={paidBy === 'client'}
-                  onChange={(e) =>
-                    setPaidBy(e.target.checked ? 'client' : 'master')
-                  }
-                  className="h-4 w-4 accent-[var(--primary)]"
-                />
-                Mijoz o‘zi sotib oldi
-              </label>
-            </div>
+            <Segment
+              options={[
+                { value: 'cash', label: 'Naqd' },
+                { value: 'card', label: 'Karta' },
+                { value: 'transfer', label: 'O‘tkazma' },
+              ]}
+              value={method}
+              onChange={(v) => setMethod(v as PayMethod)}
+            />
           )}
 
           <div className="rounded-card border border-border bg-surface p-3 text-center">
@@ -432,7 +416,6 @@ function ExpenseFlow({
   const create = useCreateEntry(projectId)
   const [name, setName] = useState('')
   const [amount, setAmount] = useState<number | null>(null)
-  const [paidBy, setPaidBy] = useState<'master' | 'client'>('master')
   const [method, setMethod] = useState<PayMethod>('cash')
 
   const ready = name.trim().length > 0 && (amount ?? 0) > 0
@@ -443,12 +426,11 @@ function ExpenseFlow({
       kind: 'expense',
       name: name.trim(),
       unit_price: amount ?? undefined,
-      paid_by: paidBy,
       payment_method: method,
     })
     hapticSuccess()
     onDone()
-  }, [ready, create, name, amount, paidBy, method, onDone])
+  }, [ready, create, name, amount, method, onDone])
 
   useMainButton({
     text: 'Saqlash',
@@ -496,17 +478,6 @@ function ExpenseFlow({
           value={method}
           onChange={(v) => setMethod(v as PayMethod)}
         />
-        <label className="flex items-center gap-2 text-label text-text-muted">
-          <input
-            type="checkbox"
-            checked={paidBy === 'client'}
-            onChange={(e) =>
-              setPaidBy(e.target.checked ? 'client' : 'master')
-            }
-            className="h-4 w-4 accent-[var(--primary)]"
-          />
-          Mijoz o‘zi sotib oldi
-        </label>
       </div>
     </Screen>
   )

@@ -124,14 +124,6 @@ class ExpenseRow:
 
 
 @dataclass
-class PaymentRow:
-    day: date
-    purpose: str  # labor | material
-    method: str
-    amount: Decimal
-
-
-@dataclass
 class ReportData:
     project_title: str
     client_name: str | None
@@ -142,17 +134,13 @@ class ReportData:
     period_to: date | None = None
 
     works: list[WorkRow] = field(default_factory=list)
-    materials_master: list[MaterialRow] = field(default_factory=list)
-    materials_client: list[MaterialRow] = field(default_factory=list)
-    expenses_master: list[ExpenseRow] = field(default_factory=list)
-    expenses_client: list[ExpenseRow] = field(default_factory=list)
-    payments: list[PaymentRow] = field(default_factory=list)
+    materials: list[MaterialRow] = field(default_factory=list)
+    expenses: list[ExpenseRow] = field(default_factory=list)
 
-    # Butun loyiha bo'yicha (Mini App bilan bir xil raqamlar).
-    # Sana filtri bularga ta'sir qilmaydi — hisob-kitob doim to'liq.
+    # Ish haqi hisobi — butun loyiha bo'yicha (Mini App bilan bir xil).
+    # Sana filtri bunga ta'sir qilmaydi.
     works_total: Decimal = Decimal(0)
     paid_labor: Decimal = Decimal(0)  # to'lovlar, purpose=labor
-    material_paid: Decimal = Decimal(0)  # to'lovlar, purpose=material
 
 
 _METHOD_UZ = {"cash": "Naqd", "card": "Karta", "transfer": "O'tkazma"}
@@ -463,16 +451,16 @@ def _material_name(m: MaterialRow) -> str:
     return f"{m.name} ({m.vendor})" if m.vendor else m.name
 
 
-def _mat_materials(data: ReportData, st: dict, num: _Num) -> list:
-    if not data.materials_master:
-        return []
+def _mat_materials(data: ReportData, st: dict, num: _Num) -> tuple[list, Decimal]:
+    if not data.materials:
+        return [], Decimal(0)
     widths = [18 * mm, 46 * mm, 22 * mm, 28 * mm, 30 * mm, 30 * mm]
     rows: list[list] = [
         ["Sana", "Nomi (sotuvchi)", "Miqdor", "Narxi", "Summa", "Usul"]
     ]
     extra: list = []
     sub = Decimal(0)
-    for m in sorted(data.materials_master, key=lambda r: r.day):
+    for m in sorted(data.materials, key=lambda r: r.day):
         rows.append([
             _dt(m.day), _material_name(m), _qty(m.qty, m.unit_label),
             _money(m.unit_price), _money(m.amount), _method(m.method),
@@ -490,18 +478,18 @@ def _mat_materials(data: ReportData, st: dict, num: _Num) -> list:
         ("LINEABOVE", (0, -1), (-1, -1), 0.4, _GREY),
         *extra,
     ]))
-    return [Paragraph(f"{num()}. Materiallar", st["h2"]), t]
+    return [Paragraph(f"{num()}. Materiallar", st["h2"]), t], sub
 
 
-def _mat_expenses(data: ReportData, st: dict, num: _Num) -> list:
+def _mat_expenses(data: ReportData, st: dict, num: _Num) -> tuple[list, Decimal]:
     # Bo'sh bo'lsa bo'lim umuman chiqmaydi
-    if not data.expenses_master:
-        return []
+    if not data.expenses:
+        return [], Decimal(0)
     widths = [24 * mm, 84 * mm, 36 * mm, 30 * mm]
     rows: list[list] = [["Sana", "Nomi", "Summa", "To'lov usuli"]]
     extra: list = []
     sub = Decimal(0)
-    for e in sorted(data.expenses_master, key=lambda r: r.day):
+    for e in sorted(data.expenses, key=lambda r: r.day):
         rows.append([_dt(e.day), e.name, _money(e.amount), _method(e.method)])
         if e.note:
             rows.append([Paragraph(_esc(e.note), st["note"]), "", "", ""])
@@ -514,91 +502,44 @@ def _mat_expenses(data: ReportData, st: dict, num: _Num) -> list:
         ("LINEABOVE", (0, -1), (-1, -1), 0.4, _GREY),
         *extra,
     ]))
-    return [Paragraph(f"{num()}. Xarajatlar", st["h2"]), t]
+    return [Paragraph(f"{num()}. Xarajatlar", st["h2"]), t], sub
 
 
-def _mat_reckoning(data: ReportData, st: dict, num: _Num) -> list:
-    mat_sum = sum((m.amount for m in data.materials_master), Decimal(0))
-    exp_sum = sum((e.amount for e in data.expenses_master), Decimal(0))
-    total = mat_sum + exp_sum
-    given = data.material_paid
-    left = total - given
-    left_label = "QOLDIQ" if left >= 0 else "MIJOZ AVANSI"
-
-    lines: list[tuple[str, str]] = [("Materiallar", _money(mat_sum))]
-    if data.expenses_master:
-        lines.append(("Xarajatlar", f"+ {_money(exp_sum)}"))
-    jami_idx = len(lines)
-    lines.append(("JAMI", _money(total)))
-    lines.append(("Mijoz bergan", f"− {_money(given)}"))
-    left_idx = len(lines)
-    lines.append((left_label, _money_sum(abs(left))))
-    return [
-        _reckoning(
-            f"{num()}. Hisob-kitob", lines, st,
-            rule_at={jami_idx, left_idx},
-        )
-    ]
-
-
-def _mat_client_info(data: ReportData, st: dict, num: _Num) -> list:
-    if not data.materials_client and not data.expenses_client:
-        return []
-    widths = [22 * mm, 90 * mm, 32 * mm, 30 * mm]
-    rows: list[list] = [["Sana", "Nomi", "Miqdor", "Summa"]]
-    sub = Decimal(0)
-    for m in sorted(data.materials_client, key=lambda r: r.day):
-        rows.append([
-            _dt(m.day), _material_name(m), _qty(m.qty, m.unit_label),
-            _money(m.amount),
-        ])
-        sub += m.amount
-    for e in sorted(data.expenses_client, key=lambda r: r.day):
-        rows.append([_dt(e.day), e.name, "—", _money(e.amount)])
-        sub += e.amount
-    rows.append(_subtotal_row("Jami", _money_sum(sub), 4, 3))
-    t = _table(rows, widths, right={3})
+def _total_spent_line(total: Decimal, st: dict) -> list:
+    """Bitta qator, katta shrift — mijoz uchun asosiy raqam."""
+    t = Table(
+        [["JAMI SARFLANGAN", _money_sum(total)]],
+        colWidths=[90 * mm, _USABLE - 90 * mm],
+    )
     t.setStyle(TableStyle([
-        ("FONTNAME", (0, -1), (-1, -1), _FONT_BOLD),
-        ("LINEABOVE", (0, -1), (-1, -1), 0.4, _GREY),
+        ("FONTNAME", (0, 0), (-1, -1), _FONT_BOLD),
+        ("FONTSIZE", (0, 0), (-1, -1), 13),
+        ("TEXTCOLOR", (0, 0), (-1, -1), _BLACK),
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+        ("LINEABOVE", (0, 0), (-1, 0), 0.8, _BLACK),
+        ("TOPPADDING", (0, 0), (-1, 0), 8),
     ]))
-    return [
-        Paragraph(f"{num()}. Mijoz o'zi olgan", st["h2"]),
-        Paragraph(
-            "Faqat ma'lumot uchun — yuqoridagi JAMI ga kirmaydi.", st["muted"]
-        ),
-        Spacer(1, 3),
-        t,
-    ]
+    return [Spacer(1, 4), t]
 
 
 def _materials_story(data: ReportData, st: dict) -> list:
     _ensure_fonts()  # Paragraph qurishdan oldin — family xaritasi kerak
     flow = _header(data, st, "MATERIAL VA XARAJATLAR")
     num = _Num()
-    empty = (
-        not data.materials_master
-        and not data.expenses_master
-        and not data.materials_client
-        and not data.expenses_client
-        and data.material_paid == 0
-    )
-    if empty:
+    if not data.materials and not data.expenses:
         flow.append(Paragraph(
             "Bu obyekt bo'yicha bu davrda material yoki xarajat yo'q.",
             st["body"],
         ))
         return flow
+    total = Decimal(0)
     for section in (_mat_materials, _mat_expenses):
-        part = section(data, st, num)
+        part, sub = section(data, st, num)
         if part:
             flow += part
             flow.append(Spacer(1, 6))
-    flow += _mat_reckoning(data, st, num)
-    info = _mat_client_info(data, st, num)
-    if info:
-        flow.append(Spacer(1, 10))
-        flow += info
+            total += sub
+    flow += _total_spent_line(total, st)
     return flow
 
 

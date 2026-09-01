@@ -61,30 +61,25 @@ async def main() -> int:
             # 1. Ish (oddiy) — 2 400 000
             _entry(pid, uid, kind="work", name="Ish A", unit="m2",
                    unit_price=Decimal("2400000")),
-            # 2. Ish (brak) — 180 000, qarzga kirmasligi kerak
+            # 2. Ish (brak) — 180 000, ish haqi qarziga kirmasligi kerak
             _entry(pid, uid, kind="work", name="Ish brak", unit="m2",
                    unit_price=Decimal("180000"), is_rework=True),
-            # 3. Material, usta puliga, karta — 350 000
-            _entry(pid, uid, kind="material", name="Mat usta", unit="qop",
-                   unit_price=Decimal("350000"), paid_by="master",
-                   payment_method="card"),
-            # 4. Material, mijoz puliga, naqd — 520 000
-            _entry(pid, uid, kind="material", name="Mat mijoz", unit="qop",
-                   unit_price=Decimal("520000"), paid_by="client",
-                   payment_method="cash"),
-            # 5. Xarajat (ovqat), usta puliga — 120 000, qarzga kirmasligi kerak
+            # 3-4. Materiallar — 350 000 + 520 000 (paid_by listener'da 'client')
+            _entry(pid, uid, kind="material", name="Mat 1", unit="qop",
+                   unit_price=Decimal("350000"), payment_method="card"),
+            _entry(pid, uid, kind="material", name="Mat 2", unit="qop",
+                   unit_price=Decimal("520000"), payment_method="cash"),
+            # 5-6. Xarajatlar — 120 000 + 120 000
             _entry(pid, uid, kind="expense", name="Ovqat", unit="summa",
-                   unit_price=Decimal("120000"), paid_by="master",
-                   payment_method="cash"),
-            # 6. Xarajat (transport), mijoz puliga — 120 000
+                   unit_price=Decimal("120000"), payment_method="cash"),
             _entry(pid, uid, kind="expense", name="Transport", unit="summa",
-                   unit_price=Decimal("120000"), paid_by="client",
-                   payment_method="cash"),
+                   unit_price=Decimal("120000"), payment_method="cash"),
         ]
         session.add_all(rows)
         session.add_all([
             Payment(project_id=pid, created_by_user_id=uid,
                     amount=Decimal("2000000"), purpose="labor"),
+            # Eski 'material' to'lov — hech qanday hisobga KIRMASLIGI kerak
             Payment(project_id=pid, created_by_user_id=uid,
                     amount=Decimal("1000000"), purpose="material"),
         ])
@@ -94,19 +89,17 @@ async def main() -> int:
 
         checks: list[tuple[str, Decimal | int, Decimal | int]] = [
             # Ish haqi qarzi = 2 400 000 − 2 000 000 = 400 000
+            # (purpose='material' to'lov 1 000 000 HISOBGA KIRMAYDI)
             ("labor.works_total", s.labor.works_total, Decimal("2400000.00")),
             ("labor.paid", s.labor.paid, Decimal("2000000.00")),
             ("labor.remaining", s.labor.remaining, Decimal("400000.00")),
-            # Material qarzi = (350 000 + 120 000) − 1 000 000 = −530 000 (avans)
+            # Material — faqat jami, qarz yo'q
             ("materials.materials_total", s.materials.materials_total,
-             Decimal("350000.00")),
+             Decimal("870000.00")),  # 350 000 + 520 000
             ("materials.expenses_total", s.materials.expenses_total,
-             Decimal("120000.00")),
-            ("materials.paid", s.materials.paid, Decimal("1000000.00")),
-            ("materials.remaining", s.materials.remaining,
-             Decimal("-530000.00")),
-            # Mijoz o'zi olgan: Mat mijoz 520 000 + Transport 120 000
-            ("client_bought", s.client_bought, Decimal("640000.00")),
+             Decimal("240000.00")),  # 120 000 + 120 000
+            ("materials.total_spent", s.materials.total_spent,
+             Decimal("1110000.00")),
             ("meta.entries_count", s.meta.entries_count, 6),
         ]
 
@@ -133,8 +126,8 @@ async def main() -> int:
         for line in failures:
             print(f"  - {line}")
         return 1
-    print("\nHammasi joyida: ish haqi qarzi=400 000, material avansi=530 000.")
-    print("Brak (180 000) ish haqi qarziga KIRMADI.")
+    print("\nHammasi joyida: ish haqi qarzi=400 000, jami sarflangan=1 110 000.")
+    print("Brak (180 000) va eski 'material' to'lov (1 000 000) HISOBGA KIRMADI.")
     return 0
 
 
