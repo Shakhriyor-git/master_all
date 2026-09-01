@@ -41,16 +41,34 @@ _FONT_DIR = "/usr/share/fonts/truetype/dejavu"
 _fonts_ready = False
 
 
+class FontMissingError(RuntimeError):
+    """DejaVu shrifti topilmadi — Helvetica'ga qaytmaymiz (kirill chiqmaydi)."""
+
+
 def _ensure_fonts() -> None:
     global _fonts_ready
     if _fonts_ready:
         return
     regular = os.path.join(_FONT_DIR, "DejaVuSans.ttf")
     bold = os.path.join(_FONT_DIR, "DejaVuSans-Bold.ttf")
+    missing = [p for p in (regular, bold) if not os.path.isfile(p)]
+    if missing:
+        raise FontMissingError(
+            "DejaVu shrifti topilmadi: fonts-dejavu-core o'rnatilmagan. "
+            f"Kutilgan fayllar: {', '.join(missing)}. "
+            "Kirill/o'zbek harflari (шлакаблок, o', g') uchun zarur — "
+            "Helvetica'ga qaytmaymiz."
+        )
     pdfmetrics.registerFont(TTFont(_FONT, regular))
     pdfmetrics.registerFont(TTFont(_FONT_BOLD, bold))
+    # registerFont yetarli emas: ReportLab qalin/kursiv variantlarni oddiy
+    # nom bilan bog'lay olishi uchun oila (family) ham ro'yxatga olinadi.
     pdfmetrics.registerFontFamily(
-        _FONT, normal=_FONT, bold=_FONT_BOLD, italic=_FONT, boldItalic=_FONT_BOLD
+        _FONT,
+        normal=_FONT,
+        bold=_FONT_BOLD,
+        italic=_FONT,
+        boldItalic=_FONT_BOLD,
     )
     _fonts_ready = True
 
@@ -271,7 +289,8 @@ def _reckoning(title: str, lines: list[tuple[str, str]], st: dict,
     """`lines` — (yozuv, qiymat) juftliklari. `rule_at` — qalin qilinadigan va
     ustidan chiziq tortiladigan qatorlar (0 dan)."""
     red_at = red_at or set()
-    rows = [[Paragraph(f"<b>{title}</b>", st["h3"]), ""]]
+    # h3 uslubi allaqachon qalin — <b> ichma-ich yozilmaydi
+    rows = [[Paragraph(title, st["h3"]), ""]]
     rows += [[a, b] for a, b in lines]
     t = Table(rows, colWidths=[110 * mm, _USABLE - 110 * mm])
     style = [
@@ -425,6 +444,7 @@ def _labor_reckoning(data: ReportData, st: dict, num: _Num) -> list:
 
 
 def _labor_story(data: ReportData, st: dict) -> list:
+    _ensure_fonts()  # Paragraph qurishdan oldin — family xaritasi kerak
     flow = _header(data, st, "ISH HAQI HISOBOTI")
     num = _Num()
     works_part = _labor_works(data, st, num)
@@ -557,6 +577,7 @@ def _mat_client_info(data: ReportData, st: dict, num: _Num) -> list:
 
 
 def _materials_story(data: ReportData, st: dict) -> list:
+    _ensure_fonts()  # Paragraph qurishdan oldin — family xaritasi kerak
     flow = _header(data, st, "MATERIAL VA XARAJATLAR")
     num = _Num()
     empty = (

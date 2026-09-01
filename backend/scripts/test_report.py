@@ -1,7 +1,8 @@
-"""Hisob-kitob PDF sinovi.
+"""Hisobot PDF sinovi — ikkala hujjat (ish haqi + material).
 
-Seed ma'lumot bilan PDF yasaydi, /tmp/report_test.pdf ga saqlaydi va
-sahifa sonini chiqaradi. Perf va bo'sh obyekt holatini ham tekshiradi.
+Har biri uchun /tmp/report_test_*.pdf ga yozadi va sahifa sonini chiqaradi:
+seed obyekt, bo'sh obyekt, kirill matnli yozuvlar (шлакаблок, газаблок) va
+500 yozuvli perf holati.
 
 Ishga tushirish:  docker compose exec api python scripts/test_report.py
 """
@@ -24,6 +25,7 @@ from app.services.report_data import (  # noqa: E402
     report_filename,
 )
 from app.services.report_pdf import (  # noqa: E402
+    ExpenseRow,
     MaterialRow,
     ReportData,
     WorkRow,
@@ -97,6 +99,61 @@ def _big_data() -> ReportData:
     )
 
 
+def _cyrillic_data() -> ReportData:
+    """Kirill matnli yozuvlar — DejaVu shrift xaritasi to'g'ri ishlashini
+    tekshiradi (bazada шлакаблок, газаблок kabi nomlar bor)."""
+    day = datetime.date(2026, 8, 15)
+    return ReportData(
+        project_title="Объект: Чиланзар, 12-й квартал",
+        client_name="Мижоз Акмал ака",
+        master_name="Уста Шакир",
+        master_phone="+998901234567",
+        generated_at=datetime.date(2026, 9, 1),
+        works=[
+            WorkRow(
+                day=day, name="Стяжка пола", category="Черновые работы",
+                qty=Decimal("48"), unit_label="м²",
+                unit_price=Decimal("35000"), amount=Decimal("1680000"),
+                note="Материал: шлакаблок ва газаблок ишлатилди",
+            ),
+            WorkRow(
+                day=day, name="Шпаклёвка стен", category="Черновые работы",
+                qty=Decimal("120"), unit_label="м²",
+                unit_price=Decimal("18000"), amount=Decimal("2160000"),
+                is_rework=True, note="Қайта қилинди — брак",
+            ),
+        ],
+        materials_master=[
+            MaterialRow(
+                day=day, name="Шлакоблок", qty=Decimal("200"),
+                unit_label="дона", unit_price=Decimal("4500"),
+                amount=Decimal("900000"), method="cash",
+                vendor="Қурилиш бозори",
+                note="шлакаблок — 200 дона\nгазаблок — 40 дона\nцемент — 5 қоп",
+            ),
+        ],
+        expenses_master=[
+            ExpenseRow(
+                day=day, name="Такси (материал ташиш)",
+                amount=Decimal("120000"), method="cash",
+            ),
+        ],
+        materials_client=[
+            MaterialRow(
+                day=day, name="Обойный клей", qty=Decimal("3"),
+                unit_label="дона", unit_price=Decimal("45000"),
+                amount=Decimal("135000"), method="card",
+            ),
+        ],
+        works_total=Decimal("1680000"),
+        materials_by_master=Decimal("900000"),
+        paid_labor=Decimal("1000000"),
+        client_owes=Decimal("1580000"),
+        budget_given=Decimal("500000"),
+        budget_spent_materials=Decimal("135000"),
+    )
+
+
 _DOCS = (
     ("ish-haqi", build_labor_pdf_with_pages),
     ("material", build_materials_pdf_with_pages),
@@ -130,7 +187,15 @@ async def main() -> None:
         epdf, epages = builder(empty)
         print(f"Bo'sh ({part}): {epages} sahifa, {len(epdf)} bayt — OK")
 
-    # 3) 500 yozuvli hisobot — 3 soniyadan tez bo'lsin
+    # 3) kirill matnli yozuvlar — shrift xaritasi buzilmasligi kerak
+    for part, builder in _DOCS:
+        cpdf, cpages = builder(_cyrillic_data())
+        out = OUT_DIR / f"report_test_cyr_{part}.pdf"
+        out.write_bytes(cpdf)
+        print(f"Kirill ({part}): {cpages} sahifa, {len(cpdf) / 1024:.1f} KB "
+              f"— OK  ({out})")
+
+    # 4) 500 yozuvli hisobot — 3 soniyadan tez bo'lsin
     for part, builder in _DOCS:
         t0 = time.perf_counter()
         bpdf, bpages = builder(_big_data())
