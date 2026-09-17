@@ -42,10 +42,15 @@ export function initTelegram(): void {
  *
  * `viewportStableHeight` — klaviatura ochilganda O'ZGARMAYDI (viewportHeight'dan farqi).
  *
- * Ikki marta rAF: `viewportChanged` Telegram animatsiyasi paytida keladi va
- * `viewportStableHeight` hali eski qiymatda bo'ladi. Ikki kadr kutsak
- * Telegram qiymatni yangilashga ulguradi.
+ * Uch himoya — BITTASI HAM OLIB TASHLANMASIN:
+ *  1. ikki marta rAF — `viewportChanged` animatsiya paytida keladi,
+ *     ikki kadr kutsak Telegram `viewportStableHeight` ni yangilab ulguradi;
+ *  2. `isStateStable === false` — animatsiya davom etyapti, kutamiz;
+ *  3. 500ms safety net — Telegram hodisa yubormay qolsa ham tuzatiladi.
  */
+const MIN_VH = 200 // bundan kichik qiymat — animatsiya oralig'idagi xato
+const VH_EPSILON = 4 // px — arzimas farq, qayta yozmaymiz
+
 function readStableHeight(): number {
   try {
     return WebApp.viewportStableHeight || 0
@@ -54,25 +59,22 @@ function readStableHeight(): number {
   }
 }
 
-// Ekran shunchalik kichik bo'lmaydi — bu animatsiya oralig'idagi xato qiymat
-const MIN_VH = 200
+function currentVh(): number {
+  return parseInt(
+    document.documentElement.style.getPropertyValue('--tg-vh') || '0',
+    10,
+  )
+}
 
 export function syncViewport(): void {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      let h = readStableHeight()
-      if (!h && typeof window !== 'undefined') h = window.innerHeight
+      const h = readStableHeight() || window.innerHeight
       if (h < MIN_VH) return
+      if (Math.abs(h - currentVh()) < VH_EPSILON) return
       document.documentElement.style.setProperty('--tg-vh', `${h}px`)
     })
   })
-}
-
-function currentVh(): number {
-  return parseInt(
-    document.documentElement.style.getPropertyValue('--tg-vh'),
-    10,
-  )
 }
 
 let _viewportBound = false
@@ -80,8 +82,8 @@ export function bindViewportSync(): void {
   if (_viewportBound) return
   _viewportBound = true
   syncViewport()
+
   try {
-    // isStateStable=false — animatsiya davom etyapti, oraliq qiymatni olmaymiz
     WebApp.onEvent('viewportChanged', (e) => {
       if (e && e.isStateStable === false) return
       syncViewport()
@@ -89,17 +91,14 @@ export function bindViewportSync(): void {
   } catch {
     /* noop */
   }
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', syncViewport)
-    // Safety net: Telegram hodisa yubormay qolsa ham 500ms ichida tuzatiladi
-    window.setInterval(() => {
-      const h = readStableHeight()
-      const cur = currentVh()
-      if (h >= MIN_VH && (Number.isNaN(cur) || Math.abs(h - cur) > 4)) {
-        syncViewport()
-      }
-    }, 500)
-  }
+
+  window.addEventListener('resize', syncViewport)
+
+  window.setInterval(() => {
+    const h = readStableHeight()
+    if (!h) return
+    if (Math.abs(h - currentVh()) > VH_EPSILON) syncViewport()
+  }, 500)
 }
 
 export function getColorScheme(): Scheme {
