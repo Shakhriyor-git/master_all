@@ -7,3 +7,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** vite.config.ts `define` orqali — build identifikatori */
+declare const __BUILD_ID__: string
