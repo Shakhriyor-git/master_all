@@ -10,3 +10,4 @@ interface ImportMeta {
 
 /** vite.config.ts `define` orqali — build identifikatori */
 declare const __BUILD_ID__: string
+declare const __BUILD_DATE__: string

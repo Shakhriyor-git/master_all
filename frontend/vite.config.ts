@@ -20,6 +20,24 @@ function resolveBuildId(): string {
 
 const BUILD_ID = resolveBuildId()
 
+/** Commit vaqti — Sozlamalarda "Versiya 17.09.2026 · 11:39" ko'rinishida. */
+function resolveBuildDate(): string {
+  try {
+    // format-local + TZ — CI (UTC) da ham Toshkent vaqti chiqsin
+    return execSync(
+      'git log -1 --format=%cd --date=format-local:%d.%m.%Y·%H:%M',
+      { stdio: ['ignore', 'pipe', 'ignore'], env: { ...process.env, TZ: 'Asia/Tashkent' } },
+    )
+      .toString()
+      .trim()
+      .replace('·', ' · ')
+  } catch {
+    return 'dev'
+  }
+}
+
+const BUILD_DATE = resolveBuildDate()
+
 /**
  * dist/version.json — ilova ochilganda serverdan olinadi, va index.html ichiga
  * `window.__BUILD_ID__` yoziladi. Ikkisi farq qilsa — HTML eski (keshdan kelgan).
@@ -50,6 +68,7 @@ export default defineConfig({
   plugins: [react(), versionFile()],
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
+    __BUILD_DATE__: JSON.stringify(BUILD_DATE),
   },
   server: {
     port: 5173,

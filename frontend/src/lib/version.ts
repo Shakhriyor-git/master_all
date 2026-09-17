@@ -15,8 +15,8 @@ const DEBUG_KEY = 'version_debug'
 /** Bundle qaysi commit'dan build qilingan — ko'rsatish uchun. */
 export const BUILD_ID: string = __BUILD_ID__
 
-/** Sozlamalarda ko'rsatiladigan qisqa shakl — git sha ning 7 belgisi. */
-export const BUILD_SHORT = BUILD_ID.slice(0, 7)
+/** Sozlamalarda ko'rsatiladigan shakl — commit sanasi va vaqti. */
+export const BUILD_LABEL: string = __BUILD_DATE__
 
 /** index.html dagi inline skript yozgan oxirgi tekshiruv natijasi. */
 export function readVersionDebug(): string {

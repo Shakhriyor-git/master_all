@@ -15,7 +15,7 @@ import { useMe } from '../hooks/useMe'
 import { useTheme } from '../theme/themeContext'
 import type { ThemePref } from '../api/me'
 import { confirmDialog } from '../lib/telegram'
-import { BUILD_SHORT, forceReload, readVersionDebug } from '../lib/version'
+import { BUILD_LABEL, forceReload, readVersionDebug } from '../lib/version'
 
 const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'Kunduzgi' },
@@ -50,7 +50,7 @@ export function Settings() {
       </Row>
 
       <p className="mt-6 flex items-center justify-center gap-1.5 text-label text-text-faint">
-        Versiya {BUILD_SHORT}
+        Versiya {BUILD_LABEL}
         <button
           type="button"
           aria-label="Yangilash"
@@ -63,6 +63,9 @@ export function Settings() {
       </p>
       <p className="mt-1 text-center text-label text-text-faint">
         {readVersionDebug()}
+      </p>
+      <p className="mt-4 text-center text-label text-text-faint">
+        Xotirjam bo‘ling
       </p>
     </Screen>
   )
