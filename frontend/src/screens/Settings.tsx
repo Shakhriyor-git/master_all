@@ -15,7 +15,7 @@ import { useMe } from '../hooks/useMe'
 import { useTheme } from '../theme/themeContext'
 import type { ThemePref } from '../api/me'
 import { confirmDialog } from '../lib/telegram'
-import { BUILD_SHORT, forceReload } from '../lib/version'
+import { BUILD_SHORT, forceReload, readVersionDebug } from '../lib/version'
 
 const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'Kunduzgi' },
@@ -60,6 +60,9 @@ export function Settings() {
         >
           <IconRefresh size={14} />
         </button>
+      </p>
+      <p className="mt-1 text-center text-label text-text-faint">
+        {readVersionDebug()}
       </p>
     </Screen>
   )

@@ -10,13 +10,22 @@
  * bilan solishtiriladi. Farq bo'lsa — kesh chetlab o'tiladigan URL bilan
  * reload. Bir build uchun sessiyada bir marta (`reloaded_for`) — aylanmaydi.
  */
-const RELOADED_KEY = 'reloaded_for'
+const DEBUG_KEY = 'version_debug'
 
 /** Bundle qaysi commit'dan build qilingan — ko'rsatish uchun. */
 export const BUILD_ID: string = __BUILD_ID__
 
 /** Sozlamalarda ko'rsatiladigan qisqa shakl — git sha ning 7 belgisi. */
 export const BUILD_SHORT = BUILD_ID.slice(0, 7)
+
+/** index.html dagi inline skript yozgan oxirgi tekshiruv natijasi. */
+export function readVersionDebug(): string {
+  try {
+    return localStorage.getItem(DEBUG_KEY) ?? '—'
+  } catch {
+    return '—'
+  }
+}
 
 async function fetchServerBuild(): Promise<string | null> {
   try {
@@ -31,43 +40,33 @@ async function fetchServerBuild(): Promise<string | null> {
   }
 }
 
-function alreadyReloadedFor(id: string): boolean {
-  try {
-    return sessionStorage.getItem(RELOADED_KEY) === id
-  } catch {
-    return true // sessionStorage yopiq — aylanma bo'lmasin, reload qilmaymiz
-  }
+/**
+ * Yangi index.html ni serverdan (unikal ?t= — kesh mumkin emas) olib,
+ * hujjatni joyida almashtiradi. index.html dagi inline skript bilan bir xil
+ * usul — Telegram WebView reload/replace ni keshdan berishi mumkin.
+ */
+async function swapDocument(): Promise<void> {
+  const html = await (
+    await fetch(`/?t=${Date.now()}`, { cache: 'no-store' })
+  ).text()
+  document.open()
+  document.write(html)
+  document.close()
 }
 
-/** Kesh chetlab o'tilsin: URL ga ?v=<sha7> qo'shib yuklaymiz. */
-function reloadBypassingCache(id: string): void {
-  try {
-    sessionStorage.setItem(RELOADED_KEY, id)
-  } catch {
-    return
-  }
-  const u = new URL(window.location.href)
-  u.searchParams.set('v', id.slice(0, 7))
-  window.location.replace(u.toString())
-}
-
-/** index.html dagi inline skript bilan bir xil semantika. */
+/** Ilova ochiq turganda serverda yangi build paydo bo'lsa — almashtirish. */
 export async function reloadIfStale(): Promise<void> {
   if (!import.meta.env.PROD) return
   const server = await fetchServerBuild()
   if (!server || server === BUILD_ID) return
-  if (alreadyReloadedFor(server)) return
-  reloadBypassingCache(server)
+  try {
+    await swapDocument()
+  } catch {
+    /* internet uzildi — eski bundle bilan davom etamiz */
+  }
 }
 
-/** Sozlamalardagi "yangilash" tugmasi: belgini tozalab majburan reload. */
+/** Sozlamalardagi "yangilash" tugmasi: majburan yangi hujjat. */
 export function forceReload(): void {
-  try {
-    sessionStorage.removeItem(RELOADED_KEY)
-  } catch {
-    /* noop */
-  }
-  const u = new URL(window.location.href)
-  u.searchParams.set('v', String(Date.now()))
-  window.location.replace(u.toString())
+  void swapDocument().catch(() => window.location.reload())
 }

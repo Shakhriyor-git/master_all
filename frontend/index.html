@@ -10,28 +10,43 @@
     <!--
       Eski bundle'dan himoya — React yuklanishidan OLDIN, inline.
       Vite build vaqtida head boshiga `window.__BUILD_ID__` (git sha) yozadi.
-      Serverdagi version.json shundan farq qilsa — bu HTML keshdan kelgan,
-      eski bundle'ni yuklaydi. Kesh chetlab o'tiladigan URL bilan reload.
-      Aylanmaslik uchun: bir build uchun sessiyada faqat bir marta.
+      Serverdagi version.json shundan farq qilsa — bu HTML keshdan kelgan.
+      Telegram WebView navigatsiya keshini (reload/replace) ham e'tiborsiz
+      qoldirishi mumkin, shuning uchun yangi index.html ni fetch bilan
+      (unikal ?t= — kesh mumkin emas) olib, hujjatni joyida almashtiramiz.
+      Aylanma yo'q: yangi hujjatning ID si server bilan bir xil bo'ladi.
+      Natija localStorage.version_debug ga yoziladi (Sozlamalarda ko'rinadi).
     -->
     <script>
       ;(async function () {
+        function dbg(m) {
+          try {
+            localStorage.setItem(
+              'version_debug',
+              new Date().toISOString().slice(11, 19) + ' ' + m
+            )
+          } catch (e) {}
+        }
         try {
           var mine = window.__BUILD_ID__
           if (!mine) return // dev rejim
           var res = await fetch('/version.json?t=' + Date.now(), {
             cache: 'no-store',
           })
-          if (!res.ok) return
+          if (!res.ok) return dbg('version.json ' + res.status)
           var build = (await res.json()).build
-          if (!build || build === mine) return
-          var KEY = 'reloaded_for'
-          if (sessionStorage.getItem(KEY) === build) return
-          sessionStorage.setItem(KEY, build)
-          var u = new URL(location.href)
-          u.searchParams.set('v', build.slice(0, 7))
-          location.replace(u.toString())
-        } catch (e) {}
+          if (!build || build === mine) return dbg('ok ' + mine.slice(0, 7))
+          dbg('stale ' + mine.slice(0, 7) + ' -> ' + build.slice(0, 7))
+          var html = await (
+            await fetch('/?t=' + Date.now(), { cache: 'no-store' })
+          ).text()
+          if (html.indexOf(build) < 0) return dbg('html eski qaytdi')
+          document.open()
+          document.write(html)
+          document.close()
+        } catch (e) {
+          dbg('xato ' + (e && e.message))
+        }
       })()
     </script>
   </head>
