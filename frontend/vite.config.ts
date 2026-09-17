@@ -1,10 +1,26 @@
+import { execSync } from 'node:child_process'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
-// Har build uchun yangi ID. `version.json` ga yoziladi va bundle'ga
-// kiritiladi — ilova ochilganda ikkisi solishtiriladi (src/lib/version.ts).
-const BUILD_ID = Date.now().toString(36)
+/**
+ * Build identifikatori = git commit sha. Lokal va CI bir xil commit'dan
+ * bir xil ID beradi — "qaysi commit'dan build qilingan" degan ma'no.
+ * CI da GITHUB_SHA, aks holda `git rev-parse HEAD`; git yo'q bo'lsa 'dev'.
+ */
+function resolveBuildId(): string {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA
+  try {
+    return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+  } catch {
+    return 'dev'
+  }
+}
 
+const BUILD_ID = resolveBuildId()
+
+/** dist/version.json — ilova ochilganda serverdan olinadi (src/lib/version.ts). */
 function versionFile(): Plugin {
   return {
     name: 'version-json',

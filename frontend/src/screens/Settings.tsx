@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { IconMusic, IconTrash } from '@tabler/icons-react'
+import { IconMusic, IconRefresh, IconTrash } from '@tabler/icons-react'
 import { patchMe, type Me } from '../api/me'
 import {
   deleteTrack,
@@ -15,14 +15,13 @@ import { useMe } from '../hooks/useMe'
 import { useTheme } from '../theme/themeContext'
 import type { ThemePref } from '../api/me'
 import { confirmDialog } from '../lib/telegram'
+import { BUILD_SHORT, forceReload } from '../lib/version'
 
 const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'Kunduzgi' },
   { value: 'dark', label: 'Tungi' },
   { value: 'auto', label: 'Avtomatik' },
 ]
-
-const APP_VERSION = '0.1.0'
 
 function mb(n: number): string {
   return (n / 1024 / 1024).toFixed(1)
@@ -50,8 +49,17 @@ export function Settings() {
         </p>
       </Row>
 
-      <p className="mt-6 text-center text-label text-text-faint">
-        Versiya {APP_VERSION}
+      <p className="mt-6 flex items-center justify-center gap-1.5 text-label text-text-faint">
+        Versiya {BUILD_SHORT}
+        <button
+          type="button"
+          aria-label="Yangilash"
+          title="Yangilash"
+          onClick={forceReload}
+          className="rounded-full p-1 active:bg-surface-2"
+        >
+          <IconRefresh size={14} />
+        </button>
       </p>
     </Screen>
   )
