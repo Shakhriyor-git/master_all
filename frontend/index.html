@@ -7,6 +7,31 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
     />
     <title>Usta Hisob</title>
+    <!--
+      Eski bundle'dan himoya — React yuklanishidan OLDIN, inline.
+      index.html no-cache bo'lgani uchun bu skript eski bundle
+      foydalanuvchilarga ham keladi: serverdagi version.json sessiyada
+      oxirgi ko'rilgan build'dan farq qilsa — bir marta reload.
+      (src/lib/version.ts dagi reloadIfStale — sessiya ichidagi qo'shimcha himoya.)
+    -->
+    <script>
+      ;(async function () {
+        try {
+          const res = await fetch('/version.json?t=' + Date.now(), {
+            cache: 'no-store',
+          })
+          if (!res.ok) return
+          const { build } = await res.json()
+          const seen = sessionStorage.getItem('seen_build')
+          if (seen && seen !== build) {
+            sessionStorage.setItem('seen_build', build)
+            location.reload()
+            return
+          }
+          if (!seen) sessionStorage.setItem('seen_build', build)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -2,6 +2,11 @@
  * Eski bundle'dan himoya. Telegram WebView `index.html` ni keshlab, deploy'dan
  * keyin ham eski JS'ni ko'rsatishi mumkin (refresh qilmaguncha).
  *
+ * Asosiy tekshiruv index.html ichida inline (React'dan oldin, eski bundle
+ * foydalanuvchilarga ham yetib boradi). Bu modul — sessiya davomidagi
+ * qo'shimcha himoya (ilova ochiq qoldirilib, keyin qaytilganda) va
+ * Sozlamalardagi "yangilash" tugmasi.
+ *
  * Model: serverdagi `version.json` ID si sessiyada oxirgi ko'rilgan ID
  * (`sessionStorage.seen_build`) bilan solishtiriladi. Farq bo'lsa — yangi ID
  * yoziladi va bir marta reload. Bir sessiyada bir marta — aylanma bo'lmaydi.
@@ -47,13 +52,19 @@ function writeSeen(id: string): boolean {
   }
 }
 
+/**
+ * index.html dagi inline skript bilan bir xil kalit (`seen_build`) va
+ * semantika: `seen` yo'q bo'lsa — faqat yozib qo'yamiz (birinchi ochilish),
+ * bor va farq qilsa — yangilab reload.
+ */
 export async function reloadIfStale(): Promise<void> {
   if (!import.meta.env.PROD) return
   const server = await fetchServerBuild()
   if (!server) return
-  if (readSeen() === server) return
+  const seen = readSeen()
+  if (seen === server) return
   if (!writeSeen(server)) return
-  window.location.reload()
+  if (seen) window.location.reload()
 }
 
 /** Sozlamalardagi "yangilash" tugmasi: belgini tozalab majburan reload. */
