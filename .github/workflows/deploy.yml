@@ -54,7 +54,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_deploy "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "mkdir -p ~/master_all/frontend-dist"
-          rsync -az --delete -e "ssh -i ~/.ssh/id_deploy" \
+          rsync -az --delete-after -e "ssh -i ~/.ssh/id_deploy" \
             frontend/dist/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/master_all/frontend-dist/"
 
