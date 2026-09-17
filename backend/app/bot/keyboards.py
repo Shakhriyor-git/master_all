@@ -4,6 +4,7 @@ Mini App bor — bot faqat: obyektlar ro'yxati (o'qish), yangi obyekt, yordam.
 Har bir obyekt kartasida `web_app` tugmasi ilovaga olib boradi.
 """
 
+import time
 from collections.abc import Sequence
 
 from aiogram.filters.callback_data import CallbackData
@@ -113,10 +114,22 @@ def projects_list_kb(
     return kb.as_markup()
 
 
+# Jarayon boshlangan vaqt — har deploy'da (konteyner qayta ishga tushganda)
+# o'zgaradi. URL ga ?v= qo'shiladi: Telegram WebView eski index.html ni URL
+# bo'yicha keshlaydi va Cache-Control ga qaramay qayta ishlatishi mumkin;
+# yangi URL = yangi kesh kaliti. Caddy try_files query ni e'tiborsiz qoldiradi.
+_BOOT_TS = int(time.time())
+
+
+def _webapp_url() -> str:
+    sep = "&" if "?" in settings.webapp_url else "?"
+    return f"{settings.webapp_url}{sep}v={_BOOT_TS}"
+
+
 def _open_app_button() -> InlineKeyboardButton:
     return InlineKeyboardButton(
         text="📱 Ilovada ochish",
-        web_app=WebAppInfo(url=settings.webapp_url),
+        web_app=WebAppInfo(url=_webapp_url()),
     )
 
 
