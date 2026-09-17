@@ -12,6 +12,8 @@ import { Settings } from './screens/Settings'
 import { Add } from './screens/Add'
 import { Catalog } from './screens/Catalog'
 import { Notes } from './screens/Notes'
+import { Partners } from './screens/Partners'
+import { PartnerDetail } from './screens/PartnerDetail'
 
 export function Root() {
   const me = useMe()
@@ -48,6 +50,8 @@ export function Root() {
             <Route path="/add" element={<Add />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/notes" element={<Notes />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/partners/:id" element={<PartnerDetail />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AppLayout>

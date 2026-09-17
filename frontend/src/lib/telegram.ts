@@ -41,18 +41,38 @@ export function initTelegram(): void {
  * Telegram sarlavhasi yig'ilishi navbar'ni siljitmaydi.
  *
  * `viewportStableHeight` — klaviatura ochilganda O'ZGARMAYDI (viewportHeight'dan farqi).
+ *
+ * Ikki marta rAF: `viewportChanged` Telegram animatsiyasi paytida keladi va
+ * `viewportStableHeight` hali eski qiymatda bo'ladi. Ikki kadr kutsak
+ * Telegram qiymatni yangilashga ulguradi.
  */
-export function syncViewport(): void {
-  let h = 0
+function readStableHeight(): number {
   try {
-    h = WebApp.viewportStableHeight || 0
+    return WebApp.viewportStableHeight || 0
   } catch {
-    h = 0
+    return 0
   }
-  if (!h && typeof window !== 'undefined') h = window.innerHeight
-  if (h > 0) {
-    document.documentElement.style.setProperty('--tg-vh', `${h}px`)
-  }
+}
+
+// Ekran shunchalik kichik bo'lmaydi — bu animatsiya oralig'idagi xato qiymat
+const MIN_VH = 200
+
+export function syncViewport(): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      let h = readStableHeight()
+      if (!h && typeof window !== 'undefined') h = window.innerHeight
+      if (h < MIN_VH) return
+      document.documentElement.style.setProperty('--tg-vh', `${h}px`)
+    })
+  })
+}
+
+function currentVh(): number {
+  return parseInt(
+    document.documentElement.style.getPropertyValue('--tg-vh'),
+    10,
+  )
 }
 
 let _viewportBound = false
@@ -61,12 +81,24 @@ export function bindViewportSync(): void {
   _viewportBound = true
   syncViewport()
   try {
-    WebApp.onEvent('viewportChanged', syncViewport)
+    // isStateStable=false — animatsiya davom etyapti, oraliq qiymatni olmaymiz
+    WebApp.onEvent('viewportChanged', (e) => {
+      if (e && e.isStateStable === false) return
+      syncViewport()
+    })
   } catch {
     /* noop */
   }
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', syncViewport)
+    // Safety net: Telegram hodisa yubormay qolsa ham 500ms ichida tuzatiladi
+    window.setInterval(() => {
+      const h = readStableHeight()
+      const cur = currentVh()
+      if (h >= MIN_VH && (Number.isNaN(cur) || Math.abs(h - cur) > 4)) {
+        syncViewport()
+      }
+    }, 500)
   }
 }
 

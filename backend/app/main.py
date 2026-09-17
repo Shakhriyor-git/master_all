@@ -13,6 +13,7 @@ from app.api.routes import (
     health,
     me,
     notes,
+    partners,
     payments,
     prices,
     projects,
@@ -80,6 +81,7 @@ app.include_router(entries.router)
 app.include_router(payments.router)
 app.include_router(timeline.router)
 app.include_router(notes.router)
+app.include_router(partners.router)
 app.include_router(ai.router)
 
 # BOT_USE_WEBHOOK=true bo'lsa POST /tg/{secret} route'ini qo'shadi

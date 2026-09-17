@@ -170,15 +170,13 @@ export function Profile() {
           label="Qaydlarim"
           sub={`${me.notes_count} ta ro‘yxat`}
         />
-        <div className="flex items-center gap-3 px-4 py-3 opacity-50">
-          <span className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-surface-2 text-text-muted">
-            <IconUsers size={18} />
-          </span>
-          <span className="flex-1 text-body text-text">Brigada</span>
-          <span className="rounded-chip bg-surface-2 px-2 py-0.5 text-label text-text-muted">
-            Tez orada
-          </span>
-        </div>
+        <LinkRow
+          to="/partners"
+          icon={<IconUsers size={18} />}
+          tint="bg-surface-2 text-text-muted"
+          label="Brigada"
+          sub="Sheriklarga berilgan pullar"
+        />
       </div>
 
       <input
