@@ -20,10 +20,22 @@ function resolveBuildId(): string {
 
 const BUILD_ID = resolveBuildId()
 
-/** dist/version.json — ilova ochilganda serverdan olinadi (src/lib/version.ts). */
+/**
+ * dist/version.json — ilova ochilganda serverdan olinadi, va index.html ichiga
+ * `window.__BUILD_ID__` yoziladi. Ikkisi farq qilsa — HTML eski (keshdan kelgan).
+ */
 function versionFile(): Plugin {
   return {
     name: 'version-json',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          injectTo: 'head-prepend',
+          children: `window.__BUILD_ID__=${JSON.stringify(BUILD_ID)}`,
+        },
+      ]
+    },
     generateBundle() {
       this.emitFile({
         type: 'asset',
